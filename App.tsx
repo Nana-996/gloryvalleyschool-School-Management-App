@@ -9,10 +9,10 @@ import { FeeManager } from './features/FeeManager';
 import { EventCalendar } from './features/EventCalendar';
 import { Dashboard } from './features/Dashboard';
 import { FinancialReport } from './features/FinancialReport';
-import { Settings } from './features/Settings';
+import { Settings } from './features/Settings'; import { Applications } from './features/Applications';
 import { UserGroupIcon, CheckBadgeIcon, BookOpenIcon, CalendarIcon, CreditCardIcon, HomeIcon, SettingsIcon, MenuIcon, XIcon } from './components/Icons';
 
-type Tab = 'Dashboard' | 'Students' | 'Attendance' | 'Gradebook' | 'Fees' | 'FinancialReport' | 'Calendar' | 'Settings';
+type Tab = 'Dashboard' | 'Students' | 'Attendance' | 'Gradebook' | 'Fees' | 'FinancialReport' | 'Calendar' | 'Settings' | 'Applications';
 
 const TABS: { name: Tab; icon: React.ReactNode; label: string }[] = [
     { name: 'Dashboard', icon: <HomeIcon />, label: 'Dashboard' },
@@ -22,7 +22,7 @@ const TABS: { name: Tab; icon: React.ReactNode; label: string }[] = [
     { name: 'Fees', icon: <CreditCardIcon />, label: 'Fees' },
     { name: 'FinancialReport', icon: <CreditCardIcon />, label: 'Finance' },
     { name: 'Calendar', icon: <CalendarIcon />, label: 'Calendar' },
-    { name: 'Settings', icon: <SettingsIcon />, label: 'Settings' },
+    { name: 'Settings', icon: <SettingsIcon />, label: 'Settings' },    { name: 'Applications', icon: <UserGroupIcon />, label: 'Applications' },
 ];
 
 const App = () => {
