@@ -1,0 +1,5 @@
+{
+  "name": "School Management System",
+  "description": "A simple, free app for a small startup school to help track student progress, attendance, and overall school performance. It includes features for managing student profiles, tracking attendance, a gradebook, fee management, and an event calendar.",
+  "requestFramePermissions": []
+}
