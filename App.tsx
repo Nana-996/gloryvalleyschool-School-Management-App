@@ -9,7 +9,8 @@ import { FeeManager } from './features/FeeManager';
 import { EventCalendar } from './features/EventCalendar';
 import { Dashboard } from './features/Dashboard';
 import { FinancialReport } from './features/FinancialReport';
-import { Settings } from './features/Settings'; import { Applications } from './features/Applications';
+import { Settings } from './features/Settings';
+import { Applications } from './features/Applications';
 import { UserGroupIcon, CheckBadgeIcon, BookOpenIcon, CalendarIcon, CreditCardIcon, HomeIcon, SettingsIcon, MenuIcon, XIcon } from './components/Icons';
 
 type Tab = 'Dashboard' | 'Students' | 'Attendance' | 'Gradebook' | 'Fees' | 'FinancialReport' | 'Calendar' | 'Settings' | 'Applications';
@@ -22,7 +23,8 @@ const TABS: { name: Tab; icon: React.ReactNode; label: string }[] = [
     { name: 'Fees', icon: <CreditCardIcon />, label: 'Fees' },
     { name: 'FinancialReport', icon: <CreditCardIcon />, label: 'Finance' },
     { name: 'Calendar', icon: <CalendarIcon />, label: 'Calendar' },
-    { name: 'Settings', icon: <SettingsIcon />, label: 'Settings' },    { name: 'Applications', icon: <UserGroupIcon />, label: 'Applications' },
+    { name: 'Settings', icon: <SettingsIcon />, label: 'Settings' },
+    { name: 'Applications', icon: <UserGroupIcon />, label: 'Applications' },
 ];
 
 const App = () => {
@@ -58,6 +60,19 @@ const App = () => {
         setIsSidebarOpen(false);
     };
 
+    /**
+     * Called when an application is approved in the Applications tab.
+     * Generates a unique ID and saves the new student to localStorage
+     * so it persists across refreshes and immediately appears in Students.
+     */
+    const handleApproveStudent = (studentData: Omit<Student, 'id'>) => {
+        const newStudent: Student = {
+            ...studentData,
+            id: `student-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+        };
+        setStudents(prev => [...prev, newStudent]);
+    };
+
     const renderContent = () => {
         switch (activeTab) {
             case 'Dashboard':
@@ -65,41 +80,37 @@ const App = () => {
             case 'Students':
                 return <StudentProfiles students={students} setStudents={setStudents} reportSettings={reportSettings} />;
             case 'Attendance':
-                return <AttendanceTracker students={students} attendance={attendance} setAttendance={setAttendance} reportSettings={reportSettings} />;
+                return <AttendanceTracker students={students} attendance={attendance} setAttendance={setAttendance} />;
             case 'Gradebook':
-                return <Gradebook students={students} grades={grades} setGrades={setGrades} attendance={attendance} fees={fees} reportSettings={reportSettings} />;
+                return <Gradebook students={students} grades={grades} setGrades={setGrades} attendance={attendance} fees={fees} />;
             case 'Fees':
-                return <FeeManager students={students} fees={fees} setFees={setFees} reportSettings={reportSettings} expenses={expenses} setExpenses={setExpenses} />;
+                return <FeeManager students={students} fees={fees} setFees={setFees} reportSettings={reportSettings} />;
             case 'FinancialReport':
                 return <FinancialReport fees={fees} expenses={expenses} students={students} />;
             case 'Calendar':
                 return <EventCalendar events={events} setEvents={setEvents} />;
             case 'Settings':
                 return <Settings settings={reportSettings} setSettings={setReportSettings} />;
-                        case 'Applications':
-                            return <Applications onApprove={(student) => setStudents(prev => [...prev, student])} />;
+            case 'Applications':
+                return <Applications onApprove={handleApproveStudent} />;
             default:
                 return null;
         }
     };
 
     return (
-        <div className="app-layout">
+        <div className="app-container">
             {/* Sidebar */}
-            <nav className={`sidebar ${isSidebarOpen ? 'sidebar-open' : ''}`}>
+            <nav className={`sidebar ${isSidebarOpen ? 'open' : ''}`}>
                 <div className="sidebar-header">
-                    <div className="sidebar-brand">
-                        <img src="/logo.png" alt="Logo" className="sidebar-logo" />
-                        <div>
-                            <div className="sidebar-title">Glory Valley</div>
-                            <div className="sidebar-subtitle">Nimde3, 3ny3 Sika</div>
-                        </div>
+                    <img src="/logo.png" alt="Logo" className="sidebar-logo" />
+                    <div>
+                        <div className="sidebar-school-name">Glory Valley</div>
+                        <div className="sidebar-school-motto">Nimde3, 3ny3 Sika</div>
                     </div>
-                    <button className="sidebar-close" onClick={() => setIsSidebarOpen(false)} aria-label="Close menu">
-                        <XIcon />
-                    </button>
+                    <button onClick={() => setIsSidebarOpen(false)} aria-label="Close menu"><XIcon /></button>
                 </div>
-                <ul className="sidebar-nav">
+                <ul className="nav-list">
                     {TABS.map(tab => (
                         <li key={tab.name}>
                             <button
@@ -117,22 +128,16 @@ const App = () => {
             {/* Backdrop */}
             {isSidebarOpen && <div className="sidebar-backdrop" onClick={() => setIsSidebarOpen(false)} />}
 
-            <div className="main-content">
-                {/* Mobile Header */}
-                <header className="mobile-header">
-                    <button onClick={() => setIsSidebarOpen(true)} className="mobile-header-btn" aria-label="Open menu">
-                        <MenuIcon />
-                    </button>
-                    <div className="mobile-header-center">
-                        <img src="/logo.png" alt="Logo" className="mobile-header-logo" />
-                        <h2 className="mobile-header-title">{activeTab}</h2>
-                    </div>
-                    <div style={{ width: 24 }} />
-                </header>
-                <main className="main-content-inner">
-                    {renderContent()}
-                </main>
-            </div>
+            {/* Mobile Header */}
+            <header className="mobile-header">
+                <button onClick={() => setIsSidebarOpen(true)} className="mobile-header-btn" aria-label="Open menu"><MenuIcon /></button>
+                <img src="/logo.png" alt="Logo" className="mobile-header-logo" />
+                <h1>{activeTab}</h1>
+            </header>
+
+            <main className="main-content">
+                {renderContent()}
+            </main>
         </div>
     );
 };
