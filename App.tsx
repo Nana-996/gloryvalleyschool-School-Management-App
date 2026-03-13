@@ -16,7 +16,12 @@ import { UserGroupIcon, CheckBadgeIcon, BookOpenIcon, CalendarIcon, CreditCardIc
 type Tab = 'Dashboard' | 'Students' | 'Attendance' | 'Gradebook' | 'Fees' | 'FinancialReport' | 'Calendar' | 'Settings' | 'Applications';
 
 const VALID_TABS: Tab[] = ['Dashboard','Students','Attendance','Gradebook','Fees','FinancialReport','Calendar','Settings','Applications'];
-function getInitialTab(): Tab { const h = window.location.hash.replace('#',''); const t = VALID_TABS.find(x => x.toLowerCase() === h.toLowerCase()); return t || 'Dashboard'; }
+
+function getInitialTab(): Tab {
+    const h = window.location.hash.replace('#', '');
+    const t = VALID_TABS.find(x => x.toLowerCase() === h.toLowerCase());
+    return t || 'Dashboard';
+}
 
 const TABS: { name: Tab; icon: React.ReactNode; label: string }[] = [
     { name: 'Dashboard', icon: <HomeIcon />, label: 'Dashboard' },
@@ -31,7 +36,7 @@ const TABS: { name: Tab; icon: React.ReactNode; label: string }[] = [
 ];
 
 const App = () => {
-        const [activeTab, setActiveTab] = useState<Tab>(getInitialTab);
+    const [activeTab, setActiveTab] = useState<Tab>(getInitialTab);
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
     const [students, setStudents] = useLocalStorage<Student[]>('students', INITIAL_STUDENTS);
     const [grades, setGrades] = useLocalStorage<Grade[]>('grades', [
@@ -58,17 +63,15 @@ const App = () => {
         font: 'helvetica',
     });
 
-        useEffect(() => { window.location.hash = activeTab; }, [activeTab]);
+    useEffect(() => {
+        window.location.hash = activeTab;
+    }, [activeTab]);
+
     const handleNavClick = (tab: Tab) => {
         setActiveTab(tab);
         setIsSidebarOpen(false);
     };
 
-    /**
-     * Called when an application is approved.
-     * Generates a unique ID and persists the new student to localStorage
-     * so they immediately appear in the Students section on any tab/refresh.
-     */
     const handleApproveStudent = (studentData: Omit<Student, 'id'>) => {
         const newStudent: Student = {
             ...studentData,
@@ -79,65 +82,65 @@ const App = () => {
 
     const renderContent = () => {
         switch (activeTab) {
-            case 'Dashboard':
-                return <Dashboard students={students} attendance={attendance} fees={fees} events={events} onQuickAction={handleNavClick} />;
-            case 'Students':
-                return <StudentProfiles students={students} setStudents={setStudents} reportSettings={reportSettings} />;
-            case 'Attendance':
-                return <AttendanceTracker students={students} attendance={attendance} setAttendance={setAttendance} />;
-            case 'Gradebook':
-                return <Gradebook students={students} grades={grades} setGrades={setGrades} attendance={attendance} fees={fees} />;
-            case 'Fees':
-                return <FeeManager students={students} fees={fees} setFees={setFees} reportSettings={reportSettings} />;
-            case 'FinancialReport':
-                return <FinancialReport fees={fees} expenses={expenses} students={students} />;
-            case 'Calendar':
-                return <EventCalendar events={events} setEvents={setEvents} />;
-            case 'Settings':
-                return <Settings settings={reportSettings} setSettings={setReportSettings} />;
-            case 'Applications':
-                return <Applications onApprove={handleApproveStudent} />;
-            default:
-                return null;
+            case 'Dashboard': return <Dashboard students={students} attendance={attendance} fees={fees} events={events} expenses={expenses} onNavigate={handleNavClick} />;
+            case 'Students': return <StudentProfiles students={students} setStudents={setStudents} />;
+            case 'Attendance': return <AttendanceTracker students={students} attendance={attendance} setAttendance={setAttendance} />;
+            case 'Gradebook': return <Gradebook students={students} grades={grades} setGrades={setGrades} />;
+            case 'Fees': return <FeeManager students={students} fees={fees} setFees={setFees} expenses={expenses} setExpenses={setExpenses} />;
+            case 'FinancialReport': return <FinancialReport fees={fees} expenses={expenses} reportSettings={reportSettings} />;
+            case 'Calendar': return <EventCalendar events={events} setEvents={setEvents} />;
+            case 'Settings': return <Settings reportSettings={reportSettings} setReportSettings={setReportSettings} />;
+            case 'Applications': return <Applications onApprove={handleApproveStudent} />;
+            default: return null;
         }
     };
 
     return (
-        <div className="app-container">
-            {/* Sidebar */}
-            <nav className={`sidebar ${isSidebarOpen ? 'open' : ''}`}>
+        <div className="app-layout">
+            <aside className={`sidebar ${isSidebarOpen ? 'sidebar-open' : ''}`}>
                 <div className="sidebar-header">
-                    <img src="/logo.png" alt="Logo" className="sidebar-logo" />
-                    <div className="sidebar-school-info">
-                        <span className="sidebar-school-name">Glory Valley</span>
-                        <span className="sidebar-school-motto">Nimde3, 3ny3 Sika</span>
+                    <div className="sidebar-brand">
+                        <img src="/logo.png" alt="Logo" className="sidebar-logo" />
+                        <div>
+                            <div className="sidebar-title">Glory Valley</div>
+                            <div className="sidebar-subtitle">Nimde3, 3ny3 Sika</div>
+                        </div>
                     </div>
-                    <button onClick={() => setIsSidebarOpen(false)} aria-label="Close menu"><XIcon /></button>
-                </div>
-                {TABS.map(tab => (
-                    <button
-                        key={tab.name}
-                        onClick={() => handleNavClick(tab.name)}
-                        className={`nav-item ${activeTab === tab.name ? 'active' : ''}`}
-                    >
-                        {tab.icon}
-                        {tab.label}
+                    <button onClick={() => setIsSidebarOpen(false)} className="sidebar-close" aria-label="Close menu">
+                        <XIcon />
                     </button>
-                ))}
-            </nav>
-
-            {/* Backdrop */}
-            {isSidebarOpen && <div className="sidebar-backdrop" onClick={() => setIsSidebarOpen(false)} />}
-
-            {/* Mobile Header */}
-            <div className="mobile-header">
-                <button onClick={() => setIsSidebarOpen(true)} className="mobile-header-btn" aria-label="Open menu"><MenuIcon /></button>
-                <img src="/logo.png" alt="Logo" className="mobile-header-logo" />
-                <h1>{activeTab}</h1>
-            </div>
-
+                </div>
+                <ul className="sidebar-nav">
+                    {TABS.map(tab => (
+                        <li key={tab.name}>
+                            <button
+                                onClick={() => handleNavClick(tab.name)}
+                                className={`nav-item ${activeTab === tab.name ? 'active' : ''}`}
+                            >
+                                {tab.icon}
+                                {tab.label}
+                            </button>
+                        </li>
+                    ))}
+                </ul>
+            </aside>
+            {isSidebarOpen && (
+                <div className="sidebar-backdrop" onClick={() => setIsSidebarOpen(false)} />
+            )}
             <div className="main-content">
-                {renderContent()}
+                <div className="mobile-header">
+                    <button onClick={() => setIsSidebarOpen(true)} className="mobile-header-btn" aria-label="Open menu">
+                        <MenuIcon />
+                    </button>
+                    <div className="mobile-header-center">
+                        <img src="/logo.png" alt="Logo" className="mobile-header-logo" />
+                        <span className="mobile-header-title">{activeTab === 'FinancialReport' ? 'Finance' : activeTab}</span>
+                    </div>
+                    <div style={{ width: 40 }} />
+                </div>
+                <div className="main-content-inner">
+                    {renderContent()}
+                </div>
             </div>
         </div>
     );
