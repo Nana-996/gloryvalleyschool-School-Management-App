@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useLocalStorage } from './hooks/useLocalStorage';
 import { Student, Grade, AttendanceRecord, Fee, SchoolEvent, AttendanceStatus, ReportSettings, DailyExpense } from './types';
 import { INITIAL_STUDENTS } from './constants';
@@ -15,6 +15,9 @@ import { UserGroupIcon, CheckBadgeIcon, BookOpenIcon, CalendarIcon, CreditCardIc
 
 type Tab = 'Dashboard' | 'Students' | 'Attendance' | 'Gradebook' | 'Fees' | 'FinancialReport' | 'Calendar' | 'Settings' | 'Applications';
 
+const VALID_TABS: Tab[] = ['Dashboard','Students','Attendance','Gradebook','Fees','FinancialReport','Calendar','Settings','Applications'];
+function getInitialTab(): Tab { const h = window.location.hash.replace('#',''); const t = VALID_TABS.find(x => x.toLowerCase() === h.toLowerCase()); return t || 'Dashboard'; }
+
 const TABS: { name: Tab; icon: React.ReactNode; label: string }[] = [
     { name: 'Dashboard', icon: <HomeIcon />, label: 'Dashboard' },
     { name: 'Students', icon: <UserGroupIcon />, label: 'Students' },
@@ -28,7 +31,7 @@ const TABS: { name: Tab; icon: React.ReactNode; label: string }[] = [
 ];
 
 const App = () => {
-    const [activeTab, setActiveTab] = useState<Tab>('Dashboard');
+        const [activeTab, setActiveTab] = useState<Tab>(getInitialTab);
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
     const [students, setStudents] = useLocalStorage<Student[]>('students', INITIAL_STUDENTS);
     const [grades, setGrades] = useLocalStorage<Grade[]>('grades', [
@@ -55,6 +58,7 @@ const App = () => {
         font: 'helvetica',
     });
 
+        useEffect(() => { window.location.hash = activeTab; }, [activeTab]);
     const handleNavClick = (tab: Tab) => {
         setActiveTab(tab);
         setIsSidebarOpen(false);
