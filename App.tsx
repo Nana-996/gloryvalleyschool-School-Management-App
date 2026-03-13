@@ -76,6 +76,8 @@ const App = () => {
                 return <EventCalendar events={events} setEvents={setEvents} />;
             case 'Settings':
                 return <Settings settings={reportSettings} setSettings={setReportSettings} />;
+                        case 'Applications':
+                            return <Applications onApprove={(student) => setStudents(prev => [...prev, student])} />;
             default:
                 return null;
         }
