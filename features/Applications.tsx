@@ -1,8 +1,7 @@
 import React, { useState, useEffect } from 'react';
 
-const NETLIFY_TOKEN = 'nfp_HT1BdPZrQXFTcwUgSuwgdMwUXfrA7tDL2139';
-const SITE_ID = 'fa1a92fd-d713-4adb-9494-e749d8fa01ab';
-const FORM_NAME = 'enrollment';
+// Uses a Netlify serverless function as a proxy to avoid CORS issues
+const PROXY_ENDPOINT = '/.netlify/functions/get-applications';
 
 interface Application {
   id: string;
@@ -43,88 +42,32 @@ export const Applications: React.FC<ApplicationsProps> = ({ onApprove }) => {
     setError('');
     setDebugInfo('');
     try {
-      // Step 1: Get all forms for this site
-      const formsRes = await fetch(
-        `https://api.netlify.com/api/v1/sites/${SITE_ID}/forms`,
-        {
-          headers: {
-            Authorization: `Bearer ${NETLIFY_TOKEN}`,
-            'Content-Type': 'application/json',
-          },
+      const res = await fetch(PROXY_ENDPOINT);
+      const json = await res.json();
+
+      if (!res.ok || json.error) {
+        // Check if the form wasn't found (404)
+        if (res.status === 404) {
+          setDebugInfo(json.error || 'Enrollment form not found on Netlify.');
+          setApplications([]);
+        } else {
+          setError(json.error || `Request failed with status ${res.status}`);
         }
-      );
-
-      if (!formsRes.ok) {
-        const errText = await formsRes.text();
-        setError(`Failed to fetch forms (${formsRes.status}): ${errText}`);
         setLoading(false);
         return;
       }
 
-      const forms = await formsRes.json();
-
-      if (!Array.isArray(forms) || forms.length === 0) {
-        setDebugInfo(
-          'No forms found on this Netlify site yet. Make sure the school website has been deployed with the enrollment form, and at least one submission has been made.'
-        );
-        setApplications([]);
-        setLoading(false);
-        return;
-      }
-
-      const enrollmentForm = forms.find((f: any) => f.name === FORM_NAME);
-
-      if (!enrollmentForm) {
-        const formNames = forms.map((f: any) => f.name).join(', ');
-        setDebugInfo(
-          `Form "${FORM_NAME}" not found. Available forms on site: [${formNames}]. ` +
-          `Make sure the join page on the school website was deployed correctly with name="enrollment" and data-netlify="true", ` +
-          `and that at least one form submission has been made.`
-        );
-        setApplications([]);
-        setLoading(false);
-        return;
-      }
-
-      // Step 2: Get submissions for the enrollment form
-      const subRes = await fetch(
-        `https://api.netlify.com/api/v1/forms/${enrollmentForm.id}/submissions`,
-        {
-          headers: {
-            Authorization: `Bearer ${NETLIFY_TOKEN}`,
-            'Content-Type': 'application/json',
-          },
-        }
-      );
-
-      if (!subRes.ok) {
-        const errText = await subRes.text();
-        setError(`Failed to fetch submissions (${subRes.status}): ${errText}`);
-        setLoading(false);
-        return;
-      }
-
-      const subs = await subRes.json();
-
-      if (!Array.isArray(subs)) {
-        setError('Unexpected response from Netlify API when loading submissions.');
-        setLoading(false);
-        return;
-      }
-
+      const subs: Application[] = json.submissions || [];
       setApplications(subs);
 
       if (subs.length === 0) {
         setDebugInfo(
-          `Form "${FORM_NAME}" found (ID: ${enrollmentForm.id}) but has no submissions yet. ` +
-          `Ask a parent to submit the enrollment form on the school website.`
+          'The enrollment form is connected and active, but has no submissions yet. ' +
+          'Ask a parent to fill in the form on the school website.'
         );
       }
     } catch (e: any) {
-      setError(
-        `Network error: ${e.message}. This may be a CORS issue. ` +
-        `Try opening the app locally (npm run dev) instead of from a deployed URL, or set up a proxy.`
-      );
+      setError(`Failed to load applications: ${e.message}`);
     }
     setLoading(false);
   };
