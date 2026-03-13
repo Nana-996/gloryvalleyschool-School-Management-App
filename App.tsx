@@ -61,9 +61,9 @@ const App = () => {
     };
 
     /**
-     * Called when an application is approved in the Applications tab.
-     * Generates a unique ID and saves the new student to localStorage
-     * so it persists across refreshes and immediately appears in Students.
+     * Called when an application is approved.
+     * Generates a unique ID and persists the new student to localStorage
+     * so they immediately appear in the Students section on any tab/refresh.
      */
     const handleApproveStudent = (studentData: Omit<Student, 'id'>) => {
         const newStudent: Student = {
@@ -104,40 +104,37 @@ const App = () => {
             <nav className={`sidebar ${isSidebarOpen ? 'open' : ''}`}>
                 <div className="sidebar-header">
                     <img src="/logo.png" alt="Logo" className="sidebar-logo" />
-                    <div>
-                        <div className="sidebar-school-name">Glory Valley</div>
-                        <div className="sidebar-school-motto">Nimde3, 3ny3 Sika</div>
+                    <div className="sidebar-school-info">
+                        <span className="sidebar-school-name">Glory Valley</span>
+                        <span className="sidebar-school-motto">Nimde3, 3ny3 Sika</span>
                     </div>
                     <button onClick={() => setIsSidebarOpen(false)} aria-label="Close menu"><XIcon /></button>
                 </div>
-                <ul className="nav-list">
-                    {TABS.map(tab => (
-                        <li key={tab.name}>
-                            <button
-                                onClick={() => handleNavClick(tab.name)}
-                                className={`nav-item ${activeTab === tab.name ? 'active' : ''}`}
-                            >
-                                {tab.icon}
-                                {tab.label}
-                            </button>
-                        </li>
-                    ))}
-                </ul>
+                {TABS.map(tab => (
+                    <button
+                        key={tab.name}
+                        onClick={() => handleNavClick(tab.name)}
+                        className={`nav-item ${activeTab === tab.name ? 'active' : ''}`}
+                    >
+                        {tab.icon}
+                        {tab.label}
+                    </button>
+                ))}
             </nav>
 
             {/* Backdrop */}
             {isSidebarOpen && <div className="sidebar-backdrop" onClick={() => setIsSidebarOpen(false)} />}
 
             {/* Mobile Header */}
-            <header className="mobile-header">
+            <div className="mobile-header">
                 <button onClick={() => setIsSidebarOpen(true)} className="mobile-header-btn" aria-label="Open menu"><MenuIcon /></button>
                 <img src="/logo.png" alt="Logo" className="mobile-header-logo" />
                 <h1>{activeTab}</h1>
-            </header>
+            </div>
 
-            <main className="main-content">
+            <div className="main-content">
                 {renderContent()}
-            </main>
+            </div>
         </div>
     );
 };
