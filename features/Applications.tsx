@@ -1,12 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { Student } from '../types';
-
 // Serverless proxy endpoint - avoids CORS issues
 const PROXY_ENDPOINT = '/api/get-applications';
-
 // localStorage keys
 const APPROVED_IDS_KEY = 'approvedApplicationIds';
-
 interface Application {
   id: string;
   created_at: string;
@@ -25,11 +22,9 @@ interface Application {
     referral?: string;
   };
 }
-
 interface ApplicationsProps {
   onApprove: (student: Omit<Student, 'id'>) => void;
 }
-
 // Helper: load approved IDs from localStorage
 function loadApprovedIds(): Set<string> {
   try {
@@ -39,14 +34,29 @@ function loadApprovedIds(): Set<string> {
     return new Set();
   }
 }
-
 // Helper: save approved IDs to localStorage
 function saveApprovedIds(ids: Set<string>): void {
   try {
     localStorage.setItem(APPROVED_IDS_KEY, JSON.stringify([...ids]));
   } catch {}
 }
-
+// Helper: deduplicate submissions — keep only the latest per unique student
+function deduplicateApplications(subs: Application[]): Application[] {
+  const map = new Map<string, Application>();
+  for (const app of subs) {
+    const d = app.data;
+    const key = [
+      (d.student_name || '').trim().toLowerCase(),
+      (d.dob || '').trim(),
+      (d.email || '').trim().toLowerCase(),
+    ].join('|');
+    const existing = map.get(key);
+    if (!existing || new Date(app.created_at) > new Date(existing.created_at)) {
+      map.set(key, app);
+    }
+  }
+  return Array.from(map.values());
+}
 export const Applications: React.FC<ApplicationsProps> = ({ onApprove }) => {
   const [applications, setApplications] = useState<Application[]>([]);
   const [loading, setLoading] = useState(true);
@@ -54,11 +64,9 @@ export const Applications: React.FC<ApplicationsProps> = ({ onApprove }) => {
   const [debugInfo, setDebugInfo] = useState('');
   // Approved IDs are persisted in localStorage so they survive refresh
   const [approved, setApproved] = useState<Set<string>>(loadApprovedIds);
-
   useEffect(() => {
     fetchApplications();
   }, []);
-
   const fetchApplications = async () => {
     setLoading(true);
     setError('');
@@ -66,7 +74,6 @@ export const Applications: React.FC<ApplicationsProps> = ({ onApprove }) => {
     try {
       const res = await fetch(PROXY_ENDPOINT);
       const json = await res.json();
-
       if (!res.ok || json.error) {
         if (res.status === 404) {
           setDebugInfo(json.error || 'Enrollment form not found on Netlify.');
@@ -77,11 +84,11 @@ export const Applications: React.FC<ApplicationsProps> = ({ onApprove }) => {
         setLoading(false);
         return;
       }
-
       const subs: Application[] = json.submissions || [];
-      setApplications(subs);
-
-      if (subs.length === 0) {
+      // Deduplicate: one entry per unique student (latest submission wins)
+      const unique = deduplicateApplications(subs);
+      setApplications(unique);
+      if (unique.length === 0) {
         setDebugInfo(
           'The enrollment form is active, but no submissions yet. ' +
           'Ask a parent to submit the form on the school website.'
@@ -92,10 +99,8 @@ export const Applications: React.FC<ApplicationsProps> = ({ onApprove }) => {
     }
     setLoading(false);
   };
-
   const handleApprove = (app: Application) => {
     const d = app.data;
-
     // Build a fully-typed Student object matching types.ts
     const newStudent: Omit<Student, 'id'> = {
       name: d.student_name?.trim() || 'Unknown',
@@ -109,16 +114,13 @@ export const Applications: React.FC<ApplicationsProps> = ({ onApprove }) => {
       guardianName: d.guardian_name?.trim() || '',
       guardianPhone: d.guardian_phone?.trim() || '',
     };
-
     // Add to students list via parent callback (which uses useLocalStorage)
     onApprove(newStudent);
-
     // Persist approved state so it survives page refresh
     const updatedIds = new Set(approved).add(app.id);
     setApproved(updatedIds);
     saveApprovedIds(updatedIds);
   };
-
   return (
     <div className="applications-container">
       <div className="applications-header">
@@ -133,26 +135,22 @@ export const Applications: React.FC<ApplicationsProps> = ({ onApprove }) => {
           Refresh
         </button>
       </div>
-
       {loading && (
         <div className="loading-state">
           <p>Loading applications...</p>
         </div>
       )}
-
       {error && (
         <div className="error-banner">
           <strong>Error:</strong> {error}
         </div>
       )}
-
       {debugInfo && !error && (
         <div className="info-banner">
           <span>ℹ️</span>
           <p>{debugInfo}</p>
         </div>
       )}
-
       {!loading && !error && applications.length === 0 && !debugInfo && (
         <div className="empty-state">
           <span>📋</span>
@@ -162,7 +160,6 @@ export const Applications: React.FC<ApplicationsProps> = ({ onApprove }) => {
           </p>
         </div>
       )}
-
       <div className="applications-list">
         {applications.map(app => {
           const d = app.data;
