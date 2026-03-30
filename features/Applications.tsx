@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Student } from '../types';
 
 // Serverless proxy endpoint - avoids CORS issues
-const PROXY_ENDPOINT = '/.netlify/functions/get-applications';
+const PROXY_ENDPOINT = '/api/get-applications';
 
 // localStorage keys
 const APPROVED_IDS_KEY = 'approvedApplicationIds';
