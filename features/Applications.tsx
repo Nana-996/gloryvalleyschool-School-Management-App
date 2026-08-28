@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { Student } from '../types';
+import { useSyncedState } from '../hooks/useSyncedState';
 
 const PROXY_ENDPOINT = '/api/get-applications';
-const APPROVED_IDS_KEY = 'approvedApplicationIds';
 
 interface Application {
   id: string;
@@ -29,19 +29,6 @@ interface Application {
 
 interface ApplicationsProps {
   onApprove: (student: Omit<Student, 'id'>) => void;
-}
-
-function loadApprovedIds(): Set<string> {
-  try {
-    const raw = localStorage.getItem(APPROVED_IDS_KEY);
-    return raw ? new Set(JSON.parse(raw)) : new Set();
-  } catch {
-    return new Set();
-  }
-}
-
-function saveApprovedIds(ids: Set<string>) {
-  localStorage.setItem(APPROVED_IDS_KEY, JSON.stringify(Array.from(ids)));
 }
 
 function formatDate(dateStr: string): string {
@@ -78,7 +65,8 @@ export const Applications: React.FC<ApplicationsProps> = ({ onApprove }) => {
   const [applications, setApplications] = useState<Application[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [approved, setApproved] = useState<Set<string>>(loadApprovedIds());
+  const [approvedIds, setApprovedIds] = useSyncedState<string[]>('approvedApplicationIds', []);
+  const approvedSet = useMemo(() => new Set(approvedIds), [approvedIds]);
 
   const fetchApplications = async () => {
     setLoading(true);
@@ -124,18 +112,16 @@ export const Applications: React.FC<ApplicationsProps> = ({ onApprove }) => {
       guardianPhone: d.guardian_phone?.trim() || '',
     };
     onApprove(newStudent);
-    const updatedIds = new Set(approved).add(app.id);
-    setApproved(updatedIds);
-    saveApprovedIds(updatedIds);
+    setApprovedIds((prev) => (prev.includes(app.id) ? prev : [...prev, app.id]));
   };
 
   const pendingCount = useMemo(
-    () => applications.filter((a) => !approved.has(a.id)).length,
-    [applications, approved]
+    () => applications.filter((a) => !approvedSet.has(a.id)).length,
+    [applications, approvedSet]
   );
   const approvedCount = useMemo(
-    () => applications.filter((a) => approved.has(a.id)).length,
-    [applications, approved]
+    () => applications.filter((a) => approvedSet.has(a.id)).length,
+    [applications, approvedSet]
   );
 
   return (
@@ -180,7 +166,7 @@ export const Applications: React.FC<ApplicationsProps> = ({ onApprove }) => {
         <div className="applications-grid">
           {applications.map((app) => {
             const d = app.data;
-            const isApproved = approved.has(app.id);
+            const isApproved = approvedSet.has(app.id);
             const date = new Date(app.created_at);
             const paid = d.payment_status === 'paid';
             const color = getCardColor(d.class_level || '');
