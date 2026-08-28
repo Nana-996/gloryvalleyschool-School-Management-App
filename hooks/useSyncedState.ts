@@ -10,7 +10,7 @@ import {
  * useSyncedState hook:
  * Provides unified state management that is:
  * 1. Synchronous & instant on startup (from localStorage)
- * 2. Real-time synced across all devices via Firebase Firestore
+ * 2. Real-time synced across all devices via Supabase Cloud
  * 3. Cross-tab synchronized within the same browser
  * 4. Automatically migrates local data to cloud on first connection
  */

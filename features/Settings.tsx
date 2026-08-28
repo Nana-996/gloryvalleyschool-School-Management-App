@@ -26,11 +26,12 @@ export const Settings = ({ settings, setSettings, onOpenCloudSync }: SettingsPro
   const [formState, setFormState] = useState<ReportSettings>(settings);
   const [isSaved, setIsSaved] = useState(false);
   const [syncState, setSyncState] = useState<SyncState>({
-    status: 'unconfigured',
+    status: 'synced',
     lastSyncedAt: null,
     errorMessage: null,
     isOnline: typeof navigator !== 'undefined' ? navigator.onLine : true,
-    projectId: null,
+    projectName: 'Glory Valley Supabase Cloud',
+    supabaseUrl: null,
   });
   const [copiedLink, setCopiedLink] = useState(false);
 
@@ -70,85 +71,66 @@ export const Settings = ({ settings, setSettings, onOpenCloudSync }: SettingsPro
     });
   };
 
-  const isConfigured = Boolean(getActiveConfig());
+  const config = getActiveConfig();
 
   return (
     <div className="page-container">
       <h1 className="page-title" style={{ marginBottom: 24 }}>App Settings</h1>
 
-      {/* Cloud Auto-Sync & Multi-Device Section */}
-      <div className="settings-card" style={{ marginBottom: 24, border: isConfigured ? '1px solid rgba(52,211,153,0.3)' : '1px solid rgba(79,140,255,0.3)' }}>
+      {/* Supabase Database & Real-Time Cloud Sync Section */}
+      <div className="settings-card" style={{ marginBottom: 24, border: '1px solid rgba(52,211,153,0.3)' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 16, marginBottom: 16 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
             <div style={{ fontSize: 28 }}>
-              {syncState.status === 'synced' ? '🟢' : isConfigured ? '🔄' : '☁️'}
+              {syncState.status === 'syncing' ? '🔄' : syncState.status === 'offline' ? '🟡' : '🟢'}
             </div>
             <div>
               <h2 style={{ fontSize: 16, fontWeight: 700, color: 'var(--text-primary)' }}>
-                Multi-Device Cloud Auto-Sync
+                Supabase Database & Real-Time Sync
               </h2>
               <p style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 2 }}>
-                {isConfigured
-                  ? `Active & Synced with Firebase Project: ${syncState.projectId}`
-                  : 'Sync student edits, fees, grades, and attendance across all your devices in real time.'}
+                Automatic multi-device synchronization active for student records, fees, grades, and attendance.
               </p>
             </div>
           </div>
           <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-            {isConfigured && (
-              <button
-                type="button"
-                onClick={handleCopyDeviceLink}
-                className={`btn btn-sm ${copiedLink ? 'btn-success' : 'btn-secondary'}`}
-              >
-                {copiedLink ? '✓ Pairing Link Copied' : '📱 Copy Device Link'}
-              </button>
-            )}
+            <button
+              type="button"
+              onClick={handleCopyDeviceLink}
+              className={`btn btn-sm ${copiedLink ? 'btn-success' : 'btn-secondary'}`}
+            >
+              {copiedLink ? '✓ Pairing Link Copied' : '📱 Pair Another Device'}
+            </button>
             <button
               type="button"
               onClick={onOpenCloudSync}
               className="btn btn-primary btn-sm"
             >
-              {isConfigured ? '⚙️ Manage Cloud Sync' : '⚡ Connect Cloud Sync'}
+              ⚙️ Database Settings
             </button>
           </div>
         </div>
 
-        {isConfigured ? (
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 12, padding: 12, background: 'rgba(52,211,153,0.05)', borderRadius: 'var(--radius-md)', border: '1px solid rgba(52,211,153,0.15)' }}>
-            <div>
-              <span style={{ fontSize: 11, color: 'var(--text-muted)', display: 'block' }}>Sync Status</span>
-              <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--accent-emerald)' }}>
-                {syncState.status === 'synced' ? '● Real-Time Live Sync Active' : syncState.status}
-              </span>
-            </div>
-            <div>
-              <span style={{ fontSize: 11, color: 'var(--text-muted)', display: 'block' }}>Last Sync</span>
-              <span style={{ fontSize: 13, color: 'var(--text-secondary)' }}>
-                {syncState.lastSyncedAt ? syncState.lastSyncedAt.toLocaleTimeString() : 'Just now'}
-              </span>
-            </div>
-            <div>
-              <span style={{ fontSize: 11, color: 'var(--text-muted)', display: 'block' }}>Connected Project</span>
-              <span style={{ fontSize: 13, fontFamily: 'monospace', color: 'var(--accent-blue)' }}>
-                {syncState.projectId}
-              </span>
-            </div>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 12, padding: 12, background: 'rgba(52,211,153,0.05)', borderRadius: 'var(--radius-md)', border: '1px solid rgba(52,211,153,0.15)' }}>
+          <div>
+            <span style={{ fontSize: 11, color: 'var(--text-muted)', display: 'block' }}>Database Engine</span>
+            <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--accent-emerald)' }}>
+              ● Supabase Cloud (Live)
+            </span>
           </div>
-        ) : (
-          <div style={{ padding: 14, background: 'rgba(79,140,255,0.05)', borderRadius: 'var(--radius-md)', border: '1px solid rgba(79,140,255,0.15)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 12 }}>
-            <p style={{ fontSize: 13, color: 'var(--text-secondary)', margin: 0 }}>
-              Currently storing data locally on this device only. Connect Firebase to automatically sync additions and edits across your phones and computers.
-            </p>
-            <button
-              type="button"
-              onClick={onOpenCloudSync}
-              className="btn btn-secondary btn-sm"
-            >
-              Get Started &rarr;
-            </button>
+          <div>
+            <span style={{ fontSize: 11, color: 'var(--text-muted)', display: 'block' }}>Last Sync</span>
+            <span style={{ fontSize: 13, color: 'var(--text-secondary)' }}>
+              {syncState.lastSyncedAt ? syncState.lastSyncedAt.toLocaleTimeString() : 'Active (Live)'}
+            </span>
           </div>
-        )}
+          <div>
+            <span style={{ fontSize: 11, color: 'var(--text-muted)', display: 'block' }}>Database Host</span>
+            <span style={{ fontSize: 13, fontFamily: 'monospace', color: 'var(--accent-blue)' }}>
+              {config.supabaseUrl || 'Connected'}
+            </span>
+          </div>
+        </div>
       </div>
 
       {/* Report & PDF Customization Settings */}

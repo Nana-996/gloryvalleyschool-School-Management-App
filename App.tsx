@@ -84,7 +84,7 @@ const App = () => {
   useEffect(() => {
     const paired = parsePairingUrl();
     if (paired) {
-      setPairingNotice(`Device connected & synced with project "${paired.projectId}"!`);
+      setPairingNotice('Device connected & synced with Supabase Database!');
       setTimeout(() => setPairingNotice(null), 5000);
     }
   }, []);

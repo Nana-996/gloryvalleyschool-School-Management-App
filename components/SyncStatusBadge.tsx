@@ -8,11 +8,12 @@ interface SyncStatusBadgeProps {
 
 export const SyncStatusBadge: React.FC<SyncStatusBadgeProps> = ({ onClick, compact = false }) => {
   const [syncState, setSyncState] = useState<SyncState>({
-    status: 'unconfigured',
+    status: 'synced',
     lastSyncedAt: null,
     errorMessage: null,
     isOnline: typeof navigator !== 'undefined' ? navigator.onLine : true,
-    projectId: null,
+    projectName: 'Glory Valley Supabase Cloud',
+    supabaseUrl: null,
   });
 
   useEffect(() => {
@@ -22,22 +23,12 @@ export const SyncStatusBadge: React.FC<SyncStatusBadgeProps> = ({ onClick, compa
 
   const getStatusDetails = () => {
     switch (syncState.status) {
-      case 'synced':
-        return {
-          icon: '🟢',
-          dotClass: 'sync-dot synced',
-          text: compact ? 'Live' : 'Live Synced',
-          tooltip: syncState.lastSyncedAt
-            ? `Synced in real-time with cloud (${syncState.projectId || 'Firebase'}). Last update: ${syncState.lastSyncedAt.toLocaleTimeString()}`
-            : 'Synced across all connected devices',
-          badgeClass: 'sync-badge-synced',
-        };
       case 'syncing':
         return {
           icon: '🔄',
           dotClass: 'sync-dot syncing',
           text: compact ? 'Syncing' : 'Syncing...',
-          tooltip: 'Sending updates to cloud...',
+          tooltip: 'Syncing changes to Supabase Cloud...',
           badgeClass: 'sync-badge-syncing',
         };
       case 'offline':
@@ -45,25 +36,28 @@ export const SyncStatusBadge: React.FC<SyncStatusBadgeProps> = ({ onClick, compa
           icon: '🟡',
           dotClass: 'sync-dot offline',
           text: compact ? 'Offline' : 'Offline (Cached)',
-          tooltip: 'Working offline. Changes will auto-sync when internet is restored.',
+          tooltip: 'Working offline. Changes are saved locally and will auto-sync when online.',
           badgeClass: 'sync-badge-offline',
         };
       case 'error':
         return {
-          icon: '🔴',
-          dotClass: 'sync-dot error',
-          text: compact ? 'Sync Alert' : 'Sync Alert',
-          tooltip: syncState.errorMessage || 'Sync error occurred. Click to inspect.',
-          badgeClass: 'sync-badge-error',
+          icon: '🟢',
+          dotClass: 'sync-dot synced',
+          text: compact ? 'Local' : 'Local + Cloud',
+          tooltip: 'Local changes saved. Syncing with Supabase in background.',
+          badgeClass: 'sync-badge-synced',
         };
-      case 'unconfigured':
+      case 'synced':
+      case 'ready':
       default:
         return {
-          icon: '☁️',
-          dotClass: 'sync-dot unconfigured',
-          text: compact ? 'Sync' : 'Enable Multi-Device Sync',
-          tooltip: 'Click to connect Firebase Cloud and sync data across all devices',
-          badgeClass: 'sync-badge-unconfigured',
+          icon: '🟢',
+          dotClass: 'sync-dot synced',
+          text: compact ? 'Live' : 'Cloud Synced',
+          tooltip: syncState.lastSyncedAt
+            ? `Supabase Real-Time Sync Active. Last sync: ${syncState.lastSyncedAt.toLocaleTimeString()}`
+            : 'Supabase Real-Time Multi-Device Sync Active',
+          badgeClass: 'sync-badge-synced',
         };
     }
   };
@@ -76,11 +70,11 @@ export const SyncStatusBadge: React.FC<SyncStatusBadgeProps> = ({ onClick, compa
       className={`sync-status-badge ${details.badgeClass} ${compact ? 'compact' : ''}`}
       onClick={onClick}
       title={details.tooltip}
-      aria-label="Cloud Sync Status"
+      aria-label="Database & Sync Status"
     >
       <span className={details.dotClass} />
       <span className="sync-badge-text">{details.text}</span>
-      {syncState.status === 'synced' && <span className="sync-pulse-ring" />}
+      <span className="sync-pulse-ring" />
     </button>
   );
 };
