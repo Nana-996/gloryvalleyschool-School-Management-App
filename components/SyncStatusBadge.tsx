@@ -28,8 +28,8 @@ export const SyncStatusBadge: React.FC<SyncStatusBadgeProps> = ({ onClick, compa
       return {
         icon: '🔴',
         dotClass: 'sync-dot offline',
-        text: compact ? 'Sync' : 'Connect Cloud',
-        tooltip: 'Click to connect Supabase database or scan QR code for multi-device sync.',
+        text: compact ? 'Not Synced' : 'Key Required',
+        tooltip: 'Supabase API key is missing in services/supabaseConfig.ts. Data is saving locally only.',
         badgeClass: 'sync-badge-offline',
       };
     }
