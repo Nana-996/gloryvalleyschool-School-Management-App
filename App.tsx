@@ -80,6 +80,30 @@ const App = () => {
     font: 'helvetica',
   });
 
+  // Automatically prune orphaned fees, grades, and attendance if students were deleted
+  useEffect(() => {
+    if (students.length === 0) {
+      if (fees.length > 0) setFees([]);
+      if (grades.length > 0) setGrades([]);
+      if (attendance.length > 0) setAttendance([]);
+    } else {
+      const validIds = new Set(students.map((s) => s.id));
+      const hasOrphanFees = fees.some((f) => !validIds.has(f.studentId));
+      const hasOrphanGrades = grades.some((g) => !validIds.has(g.studentId));
+      const hasOrphanAttendance = attendance.some((a) => !validIds.has(a.studentId));
+
+      if (hasOrphanFees) {
+        setFees((prev) => prev.filter((f) => validIds.has(f.studentId)));
+      }
+      if (hasOrphanGrades) {
+        setGrades((prev) => prev.filter((g) => validIds.has(g.studentId)));
+      }
+      if (hasOrphanAttendance) {
+        setAttendance((prev) => prev.filter((a) => validIds.has(a.studentId)));
+      }
+    }
+  }, [students]);
+
   // Check if opened via device pairing link
   useEffect(() => {
     const paired = parsePairingUrl();
@@ -106,6 +130,13 @@ const App = () => {
     setStudents((prev) => [...prev, newStudent]);
   };
 
+  const handleDeleteStudent = (studentId: string) => {
+    setStudents((prev) => prev.filter((s) => s.id !== studentId));
+    setFees((prev) => prev.filter((f) => f.studentId !== studentId));
+    setGrades((prev) => prev.filter((g) => g.studentId !== studentId));
+    setAttendance((prev) => prev.filter((a) => a.studentId !== studentId));
+  };
+
   const renderContent = () => {
     switch (activeTab) {
       case 'Dashboard':
@@ -125,6 +156,7 @@ const App = () => {
             students={students}
             setStudents={setStudents}
             reportSettings={reportSettings}
+            onDeleteStudent={handleDeleteStudent}
           />
         );
       case 'Attendance':
@@ -163,6 +195,7 @@ const App = () => {
           <FinancialReport
             fees={fees}
             expenses={expenses}
+            students={students}
             reportSettings={reportSettings}
           />
         );

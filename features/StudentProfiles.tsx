@@ -231,9 +231,10 @@ interface StudentProfilesProps {
   students: Student[];
   setStudents: React.Dispatch<React.SetStateAction<Student[]>>;
   reportSettings: ReportSettings;
+  onDeleteStudent?: (studentId: string) => void;
 }
 
-export const StudentProfiles = ({ students, setStudents, reportSettings }: StudentProfilesProps) => {
+export const StudentProfiles = ({ students, setStudents, reportSettings, onDeleteStudent }: StudentProfilesProps) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isDownloadModalOpen, setIsDownloadModalOpen] = useState(false);
   const [editingStudent, setEditingStudent] = useState<Student | null>(null);
@@ -257,8 +258,12 @@ export const StudentProfiles = ({ students, setStudents, reportSettings }: Stude
   };
 
   const handleDeleteStudent = (studentId: string) => {
-    if (window.confirm('Are you sure you want to delete this student?')) {
-      setStudents(prev => prev.filter(s => s.id !== studentId));
+    if (window.confirm('Are you sure you want to delete this student? All associated fee and grade records will also be removed.')) {
+      if (typeof onDeleteStudent === 'function') {
+        onDeleteStudent(studentId);
+      } else {
+        setStudents(prev => prev.filter(s => s.id !== studentId));
+      }
     }
   };
 

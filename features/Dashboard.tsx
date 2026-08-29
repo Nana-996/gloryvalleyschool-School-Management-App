@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import { Student, AttendanceRecord, Fee, SchoolEvent } from '../types';
+import { Student, AttendanceRecord, Fee, SchoolEvent, DailyExpense } from '../types';
 import { UserGroupIcon, CheckBadgeIcon, CreditCardIcon, CalendarIcon } from '../components/Icons';
 
 interface DashboardProps {
@@ -7,30 +7,38 @@ interface DashboardProps {
     attendance: AttendanceRecord[];
     fees: Fee[];
     events: SchoolEvent[];
-    onQuickAction?: (tab: string) => void;
+    expenses?: DailyExpense[];
+    onNavigate?: (tab: any) => void;
 }
 
-export const Dashboard = ({ students, attendance, fees, events, onQuickAction }: DashboardProps) => {
+export const Dashboard = ({ students, attendance, fees, events, onNavigate }: DashboardProps) => {
     const { presentToday, outstandingBalance, upcomingEvents } = useMemo(() => {
         const today = new Date().toISOString().slice(0, 10);
-        const todaysAttendance = attendance.filter(a => a.date === today);
+        const validStudentIds = new Set(students.map(s => s.id));
+        
+        const todaysAttendance = attendance.filter(a => a.date === today && validStudentIds.has(a.studentId));
         const presentToday = todaysAttendance.filter(a => a.status === 'Present' || a.status === 'Late').length;
-        const totalDues = fees.reduce((sum, f) => sum + f.totalAmount, 0);
-        const totalPaid = fees.reduce((sum, f) => sum + f.amountPaid, 0);
-        const outstandingBalance = Math.max(0, totalDues - totalPaid);
+        
+        // Only calculate fees for active, existing students
+        const activeFees = fees.filter(f => validStudentIds.has(f.studentId));
+        const totalDues = activeFees.reduce((sum, f) => sum + (Number(f.totalAmount) || 0), 0);
+        const totalPaid = activeFees.reduce((sum, f) => sum + (Number(f.amountPaid) || 0), 0);
+        const outstandingBalance = students.length > 0 ? Math.max(0, totalDues - totalPaid) : 0;
+        
         const upcomingEvents = events.filter(e => {
             const eventDate = new Date(e.date);
-            const today = new Date();
+            const todayDate = new Date();
             eventDate.setHours(0, 0, 0, 0);
-            today.setHours(0, 0, 0, 0);
-            return eventDate >= today;
+            todayDate.setHours(0, 0, 0, 0);
+            return eventDate >= todayDate;
         }).slice(0, 5);
+        
         return { presentToday, outstandingBalance, upcomingEvents };
     }, [students, attendance, fees, events]);
 
     const handleQuickAction = (tab: string) => {
-        if (typeof onQuickAction === 'function') {
-            onQuickAction(tab);
+        if (typeof onNavigate === 'function') {
+            onNavigate(tab);
         }
     };
 

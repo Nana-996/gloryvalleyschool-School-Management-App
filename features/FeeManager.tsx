@@ -37,8 +37,27 @@ const FeeManager: React.FC<FeeManagerProps> = ({ students, fees, setFees, report
   const [expenseDescription, setExpenseDescription] = useState('');
   const [expenseDate, setExpenseDate] = useState(new Date().toISOString().slice(0, 10));
 
+  const validStudentIds = useMemo(() => new Set(students.map(s => s.id)), [students]);
+
+  const activeFees = useMemo(() => {
+    if (students.length === 0) return [];
+    return fees.filter(f => validStudentIds.has(f.studentId));
+  }, [fees, validStudentIds, students.length]);
+
+  // Keep selectedStudentId in sync with students list
+  React.useEffect(() => {
+    if (students.length > 0) {
+      if (!selectedStudentId || !students.some(s => s.id === selectedStudentId)) {
+        setSelectedStudentId(students[0].id);
+      }
+    } else {
+      setSelectedStudentId(null);
+    }
+  }, [students, selectedStudentId]);
+
   const studentFees = useMemo(() => {
-    let filteredFees = fees.filter(f => f.studentId === selectedStudentId);
+    if (!selectedStudentId || students.length === 0) return [];
+    let filteredFees = activeFees.filter(f => f.studentId === selectedStudentId);
     if (feeDescriptionFilter) {
       filteredFees = filteredFees.filter(f => f.description === feeDescriptionFilter);
     }
@@ -49,14 +68,17 @@ const FeeManager: React.FC<FeeManagerProps> = ({ students, fees, setFees, report
       }
     }
     return filteredFees.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
-  }, [fees, selectedStudentId, searchTerm, feeDescriptionFilter, students]);
+  }, [activeFees, selectedStudentId, searchTerm, feeDescriptionFilter, students]);
 
   const { balance, totalDues, totalPaid } = useMemo(() => {
-    const dues = studentFees.reduce((sum, f) => sum + f.totalAmount, 0);
-    const payments = studentFees.reduce((sum, f) => sum + f.amountPaid, 0);
+    if (students.length === 0 || studentFees.length === 0) {
+      return { balance: 0, totalDues: 0, totalPaid: 0 };
+    }
+    const dues = studentFees.reduce((sum, f) => sum + (Number(f.totalAmount) || 0), 0);
+    const payments = studentFees.reduce((sum, f) => sum + (Number(f.amountPaid) || 0), 0);
     const balance = Math.max(0, dues - payments);
     return { balance, totalDues: dues, totalPaid: payments };
-  }, [studentFees]);
+  }, [studentFees, students.length]);
 
   const handleAddFee = (e: React.FormEvent) => {
     e.preventDefault();
@@ -79,7 +101,7 @@ const FeeManager: React.FC<FeeManagerProps> = ({ students, fees, setFees, report
     if (window.confirm('Are you sure you want to delete this transaction?')) {
       setFees(prev => prev.filter(f => f.id !== feeId));
     }
-  }
+  };
 
   const handleUpdateFee = (feeId: string, updatedFee: Partial<Fee>) => {
     setFees(prev => prev.map(fee => fee.id === feeId ? { ...fee, ...updatedFee } : fee));
@@ -108,44 +130,44 @@ const FeeManager: React.FC<FeeManagerProps> = ({ students, fees, setFees, report
   };
 
   const financialReportSummary = useMemo(() => {
-    if (!allRangeStart || !allRangeEnd) return null;
-    const filteredFees = fees.filter(f => f.date >= allRangeStart && f.date <= allRangeEnd);
+    if (!allRangeStart || !allRangeEnd || students.length === 0) return null;
+    const filteredFees = activeFees.filter(f => f.date >= allRangeStart && f.date <= allRangeEnd);
     const filteredExpenses = expenses.filter(e => e.date >= allRangeStart && e.date <= allRangeEnd);
-    const totalPaid = filteredFees.reduce((sum, f) => sum + f.amountPaid, 0);
-    const totalDue = filteredFees.reduce((sum, f) => sum + f.totalAmount, 0);
+    const totalPaid = filteredFees.reduce((sum, f) => sum + (Number(f.amountPaid) || 0), 0);
+    const totalDue = filteredFees.reduce((sum, f) => sum + (Number(f.totalAmount) || 0), 0);
     const balance = Math.max(0, totalDue - totalPaid);
-    const totalExpenses = filteredExpenses.reduce((sum, e) => sum + e.amount, 0);
+    const totalExpenses = filteredExpenses.reduce((sum, e) => sum + (Number(e.amount) || 0), 0);
     const expenseBreakdown: Record<string, number> = {};
     filteredExpenses.forEach(expense => {
-      expenseBreakdown[expense.description] = (expenseBreakdown[expense.description] || 0) + expense.amount;
+      expenseBreakdown[expense.description] = (expenseBreakdown[expense.description] || 0) + (Number(expense.amount) || 0);
     });
     return { totalPaid, totalDue, balance, totalExpenses, expenseBreakdown };
-  }, [fees, expenses, allRangeStart, allRangeEnd]);
+  }, [activeFees, expenses, allRangeStart, allRangeEnd, students.length]);
 
   const dailyFinancialSummary = useMemo(() => {
     const today = new Date().toISOString().slice(0, 10);
-    const todayFees = fees.filter(f => f.date === today);
+    const todayFees = activeFees.filter(f => f.date === today);
     const todayExpenses = expenses.filter(e => e.date === today);
-    const totalMoneyAcquired = todayFees.reduce((sum, fee) => sum + fee.amountPaid, 0);
-    const totalMoneySpent = todayExpenses.reduce((sum, expense) => sum + expense.amount, 0);
+    const totalMoneyAcquired = todayFees.reduce((sum, fee) => sum + (Number(fee.amountPaid) || 0), 0);
+    const totalMoneySpent = todayExpenses.reduce((sum, expense) => sum + (Number(expense.amount) || 0), 0);
     const balanceRemaining = totalMoneyAcquired - totalMoneySpent;
     const expenseBreakdown: Record<string, number> = {};
     todayExpenses.forEach(expense => {
-      expenseBreakdown[expense.description] = (expenseBreakdown[expense.description] || 0) + expense.amount;
+      expenseBreakdown[expense.description] = (expenseBreakdown[expense.description] || 0) + (Number(expense.amount) || 0);
     });
     const studentBreakdown: Record<string, { name: string; amount: number }> = {};
     todayFees.forEach(fee => {
       const student = students.find(s => s.id === fee.studentId);
       if (student) {
         if (studentBreakdown[fee.studentId]) {
-          studentBreakdown[fee.studentId].amount += fee.amountPaid;
+          studentBreakdown[fee.studentId].amount += (Number(fee.amountPaid) || 0);
         } else {
-          studentBreakdown[fee.studentId] = { name: student.name, amount: fee.amountPaid };
+          studentBreakdown[fee.studentId] = { name: student.name, amount: (Number(fee.amountPaid) || 0) };
         }
       }
     });
     return { totalMoneyAcquired, totalMoneySpent, balanceRemaining, todayExpenses, studentBreakdown };
-  }, [fees, expenses, students]);
+  }, [activeFees, expenses, students]);
 
   const calculateStatus = (fee: Fee) => {
     return fee.amountPaid >= fee.totalAmount ? 'Paid' : 'Owing';
