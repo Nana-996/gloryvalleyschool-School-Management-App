@@ -2698,4 +2698,19 @@ body {
     background: rgba(244, 63, 94, 0.12);
     border: 1px solid rgba(244, 63, 94, 0.3);
     color: #fb7185;
-}
+}
+
+@keyframes spin {
+    from {
+        transform: rotate(0deg);
+    }
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+.animate-spin {
+    display: inline-block;
+    animation: spin 1s linear infinite;
+}
+

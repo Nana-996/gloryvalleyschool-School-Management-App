@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { ReportSettings } from '../types';
 import {
-  getActiveConfig,
   subscribeSyncState,
   SyncState,
-  generatePairingUrl,
+  isConfigValid,
+  getActiveConfig,
 } from '../services/cloudSync';
 
 interface SettingsProps {
@@ -26,14 +26,15 @@ export const Settings = ({ settings, setSettings, onOpenCloudSync }: SettingsPro
   const [formState, setFormState] = useState<ReportSettings>(settings);
   const [isSaved, setIsSaved] = useState(false);
   const [syncState, setSyncState] = useState<SyncState>({
-    status: 'synced',
+    status: 'ready',
     lastSyncedAt: null,
     errorMessage: null,
     isOnline: typeof navigator !== 'undefined' ? navigator.onLine : true,
-    projectName: 'Glory Valley Supabase Cloud',
+    isConfigured: true,
+    projectName: 'Glory Valley School Database',
     supabaseUrl: null,
+    pendingSyncCount: 0,
   });
-  const [copiedLink, setCopiedLink] = useState(false);
 
   useEffect(() => {
     const unsub = subscribeSyncState(setSyncState);
@@ -62,56 +63,57 @@ export const Settings = ({ settings, setSettings, onOpenCloudSync }: SettingsPro
     setTimeout(() => setIsSaved(false), 2000);
   };
 
-  const handleCopyDeviceLink = () => {
-    const url = generatePairingUrl();
-    if (!url) return;
-    navigator.clipboard.writeText(url).then(() => {
-      setCopiedLink(true);
-      setTimeout(() => setCopiedLink(false), 2500);
-    });
-  };
-
   const config = getActiveConfig();
+  const valid = isConfigValid(config);
 
   return (
     <div className="page-container">
       <h1 className="page-title" style={{ marginBottom: 24 }}>App Settings</h1>
 
-      {/* Supabase Database & Real-Time Cloud Sync Section */}
-      <div className="settings-card" style={{ marginBottom: 24, border: '1px solid rgba(52,211,153,0.3)' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 16, marginBottom: 16 }}>
+      {/* Real-Time Cloud Sync Section */}
+      <div
+        className="settings-card"
+        style={{
+          marginBottom: 24,
+          border: '1px solid rgba(52,211,153,0.3)',
+        }}
+      >
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 16, marginBottom: 16 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
             <div style={{ fontSize: 28 }}>
               {syncState.status === 'syncing' ? '🔄' : syncState.status === 'offline' ? '🟡' : '🟢'}
             </div>
             <div>
               <h2 style={{ fontSize: 16, fontWeight: 700, color: 'var(--text-primary)' }}>
-                Supabase Database & Real-Time Sync
+                Multi-Device Real-Time Cloud Sync
               </h2>
               <p style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 2 }}>
                 Automatic multi-device synchronization active for student records, fees, grades, and attendance.
               </p>
             </div>
           </div>
-          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-            <button
-              type="button"
-              onClick={handleCopyDeviceLink}
-              className={`btn btn-sm ${copiedLink ? 'btn-success' : 'btn-secondary'}`}
-            >
-              {copiedLink ? '✓ Pairing Link Copied' : '📱 Pair Another Device'}
-            </button>
+          <div>
             <button
               type="button"
               onClick={onOpenCloudSync}
-              className="btn btn-primary btn-sm"
+              className="btn btn-secondary btn-sm"
             >
-              ⚙️ Database Settings
+              📊 View Sync Status
             </button>
           </div>
         </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 12, padding: 12, background: 'rgba(52,211,153,0.05)', borderRadius: 'var(--radius-md)', border: '1px solid rgba(52,211,153,0.15)' }}>
+        <div
+          style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
+            gap: 12,
+            padding: 12,
+            background: 'rgba(52,211,153,0.05)',
+            borderRadius: 'var(--radius-md)',
+            border: '1px solid rgba(52,211,153,0.15)',
+          }}
+        >
           <div>
             <span style={{ fontSize: 11, color: 'var(--text-muted)', display: 'block' }}>Database Engine</span>
             <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--accent-emerald)' }}>
@@ -125,9 +127,9 @@ export const Settings = ({ settings, setSettings, onOpenCloudSync }: SettingsPro
             </span>
           </div>
           <div>
-            <span style={{ fontSize: 11, color: 'var(--text-muted)', display: 'block' }}>Database Host</span>
-            <span style={{ fontSize: 13, fontFamily: 'monospace', color: 'var(--accent-blue)' }}>
-              {config.supabaseUrl || 'Connected'}
+            <span style={{ fontSize: 11, color: 'var(--text-muted)', display: 'block' }}>Multi-Device Status</span>
+            <span style={{ fontSize: 13, color: 'var(--accent-blue)', fontWeight: 600 }}>
+              Automatic (Synced across all devices)
             </span>
           </div>
         </div>
