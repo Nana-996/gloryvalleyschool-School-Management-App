@@ -54,26 +54,13 @@ const App = () => {
   const [isCloudSyncOpen, setIsCloudSyncOpen] = useState(false);
   const [pairingNotice, setPairingNotice] = useState<string | null>(null);
 
-  // Synced state across all devices
-  const [students, setStudents] = useSyncedState<Student[]>('students', INITIAL_STUDENTS);
-  const [grades, setGrades] = useSyncedState<Grade[]>('grades', [
-    { id: 'g1', studentId: 's1', subject: 'Mathematics', score: 90 },
-    { id: 'g2', studentId: 's1', subject: 'English', score: 90 },
-    { id: 'g3', studentId: 's1', subject: 'Science', score: 78 },
-    { id: 'g4', studentId: 's2', subject: 'Mathematics', score: 80 },
-    { id: 'g5', studentId: 's2', subject: 'History', score: 86 },
-  ]);
-  const [attendance, setAttendance] = useSyncedState<AttendanceRecord[]>('attendance', [
-    { studentId: 's1', date: new Date().toISOString().slice(0, 10), status: AttendanceStatus.Present },
-    { studentId: 's2', date: new Date().toISOString().slice(0, 10), status: AttendanceStatus.Present },
-    { studentId: 's3', date: new Date().toISOString().slice(0, 10), status: AttendanceStatus.Absent },
-  ]);
+  // Synced state across all devices (defaults to empty arrays)
+  const [students, setStudents] = useSyncedState<Student[]>('students', []);
+  const [grades, setGrades] = useSyncedState<Grade[]>('grades', []);
+  const [attendance, setAttendance] = useSyncedState<AttendanceRecord[]>('attendance', []);
   const [fees, setFees] = useSyncedState<Fee[]>('fees', []);
   const [expenses, setExpenses] = useSyncedState<DailyExpense[]>('expenses', []);
-  const [events, setEvents] = useSyncedState<SchoolEvent[]>('events', [
-    { id: 'e1', date: '2024-07-25', title: 'Mid-term Exams', description: 'Math and Science exams', type: 'Exam' },
-    { id: 'e2', date: '2024-08-15', title: 'Summer Break', description: 'School closed for summer break', type: 'Holiday' },
-  ]);
+  const [events, setEvents] = useSyncedState<SchoolEvent[]>('events', []);
   const [reportSettings, setReportSettings] = useSyncedState<ReportSettings>('reportSettings', {
     logo: '/logo.png',
     primaryColor: '#162939',

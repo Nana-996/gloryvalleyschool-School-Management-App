@@ -12,11 +12,10 @@ import {
  * useSyncedState hook:
  * Provides robust state management that is:
  * 1. Instant on startup (hydrates synchronously from localStorage)
- * 2. Immediately pulls fresh cloud state on mount (fixes blank second devices)
+ * 2. Immediately pulls fresh cloud state on mount
  * 3. Real-time synced across all devices via Supabase Postgres changes
  * 4. Cross-tab synchronized within the same browser
- * 5. Safely auto-migrates initial seed data if cloud table is empty
- * 6. Supports wake/focus auto-refresh and manual global pull
+ * 5. Cleans up legacy mock placeholder data
  */
 export function useSyncedState<T>(
   key: string,
@@ -26,7 +25,24 @@ export function useSyncedState<T>(
   const [state, setState] = useState<T>(() => {
     try {
       const stored = window.localStorage.getItem(key);
-      return stored ? JSON.parse(stored) : initialValue;
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        // Clear out any legacy sample mock data from previous versions
+        if (key === 'students' && Array.isArray(parsed) && parsed.some((s: any) => s && s.name === 'Alice Johnson' && s.id === 's1')) {
+          try { window.localStorage.removeItem(key); } catch { /* ignore */ }
+          return initialValue;
+        }
+        if (key === 'events' && Array.isArray(parsed) && parsed.some((e: any) => e && e.title === 'Mid-term Exams' && e.id === 'e1')) {
+          try { window.localStorage.removeItem(key); } catch { /* ignore */ }
+          return initialValue;
+        }
+        if (key === 'grades' && Array.isArray(parsed) && parsed.some((g: any) => g && g.id === 'g1' && g.studentId === 's1')) {
+          try { window.localStorage.removeItem(key); } catch { /* ignore */ }
+          return initialValue;
+        }
+        return parsed;
+      }
+      return initialValue;
     } catch (error) {
       console.error(`Error reading initial localStorage key "${key}":`, error);
       return initialValue;
