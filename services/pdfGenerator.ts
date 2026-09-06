@@ -70,7 +70,7 @@ export const exportGradesToPDF = (student: Student, grades: Grade[], attendance:
   doc.setFontSize(12);
   doc.setFont(settings.font, 'normal');
   doc.text(`Student Name: ${student.name}`, 14, startY);
-  doc.text("Class: ............................", doc.internal.pageSize.getWidth() - 14, startY, { align: 'right' });
+  doc.text(`Class: ${student.class || '............................'}`, doc.internal.pageSize.getWidth() - 14, startY, { align: 'right' });
   startY += 10;
 
   // Grades Table
@@ -371,7 +371,7 @@ export interface StudentFieldOption {
 
 export const STUDENT_FIELD_OPTIONS: StudentFieldOption[] = [
   { key: 'name', label: 'Name', getValue: (s) => s.name },
-  { key: 'class', label: 'Class', getValue: (s) => s.class },
+  { key: 'class', label: 'Class', getValue: (s) => s.class || '—' },
   { key: 'age', label: 'Age', getValue: (s) => String(calculateAge(s.dob)) },
   { key: 'dob', label: 'Date of Birth', getValue: (s) => s.dob },
   { key: 'yearOfRegistration', label: 'Year of Registration', getValue: (s) => String(s.yearOfRegistration) },

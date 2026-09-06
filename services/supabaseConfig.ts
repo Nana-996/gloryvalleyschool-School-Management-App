@@ -2,6 +2,13 @@
  * ==============================================================================
  * Supabase Database Credentials & Configuration for Glory Valley School App
  * ==============================================================================
+ * 
+ * Paste your Supabase Project URL and Anon Public Key below (inside quotes '').
+ * 
+ * You can find these in your Supabase Dashboard:
+ * 1. Go to: https://supabase.com/dashboard/project/ygnjrpmosqihoxlhmufy
+ * 2. Click "Project Settings" (gear icon) -> "API" (or "API Keys")
+ * 3. Copy "Project URL" and "anon / public" API key.
  */
 
 // 1. Supabase Project URL

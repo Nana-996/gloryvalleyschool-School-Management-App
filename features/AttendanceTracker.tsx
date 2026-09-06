@@ -20,10 +20,10 @@ export const AttendanceTracker = ({ students, attendance, setAttendance, reportS
 
   const dailyRecords = useMemo(() => {
     return students
-      .filter(s => s.name.toLowerCase().includes(searchTerm.toLowerCase()) || s.class.toLowerCase().includes(searchTerm.toLowerCase()))
+      .filter(s => s.name.toLowerCase().includes(searchTerm.toLowerCase()) || (s.class || '').toLowerCase().includes(searchTerm.toLowerCase()))
       .map(student => {
         const record = attendance.find(a => a.studentId === student.id && a.date === selectedDate);
-        return { studentId: student.id, name: student.name, class: student.class, status: record ? record.status : null };
+        return { studentId: student.id, name: student.name, class: student.class || 'Unassigned', status: record ? record.status : null };
       });
   }, [students, attendance, selectedDate, searchTerm]);
 

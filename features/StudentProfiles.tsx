@@ -1,8 +1,10 @@
 import React, { useState, useMemo } from 'react';
 import { Student, ReportSettings, calculateAge } from '../types';
 import { Modal } from '../components/Modal';
-import { EditIcon, DeleteIcon, PlusIcon, SortAscendingIcon, SortDescendingIcon, DownloadIcon } from '../components/Icons';
+import { EditIcon, DeleteIcon, PlusIcon, SortAscendingIcon, SortDescendingIcon, DownloadIcon, UpgradeIcon } from '../components/Icons';
 import { STUDENT_FIELD_OPTIONS, exportStudentListToPDF } from '../services/pdfGenerator';
+import { SCHOOL_CLASSES, normalizeClassName } from '../constants';
+import { ClassUpgradeModal } from '../components/ClassUpgradeModal';
 
 interface StudentFormProps {
   onSubmit: (student: Omit<Student, 'id'>) => void;
@@ -15,7 +17,7 @@ const StudentForm = ({ onSubmit, onClose, student }: StudentFormProps) => {
     name: student?.name || '',
     dob: student?.dob || '',
     yearOfRegistration: student?.yearOfRegistration || new Date().getFullYear(),
-    class: student?.class || '',
+    class: student?.class ? normalizeClassName(student.class) : '',
     motherName: student?.motherName || '',
     motherPhone: student?.motherPhone || '',
     fatherName: student?.fatherName || '',
@@ -24,9 +26,26 @@ const StudentForm = ({ onSubmit, onClose, student }: StudentFormProps) => {
     guardianPhone: student?.guardianPhone || '',
   });
 
+  const isInitiallyCustom = Boolean(
+    student?.class &&
+    !SCHOOL_CLASSES.includes(normalizeClassName(student.class) as any)
+  );
+  const [isCustomClass, setIsCustomClass] = useState(isInitiallyCustom);
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handleClassSelectChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const val = e.target.value;
+    if (val === '__custom__') {
+      setIsCustomClass(true);
+      setFormData(prev => ({ ...prev, class: '' }));
+    } else {
+      setIsCustomClass(false);
+      setFormData(prev => ({ ...prev, class: val }));
+    }
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -58,8 +77,49 @@ const StudentForm = ({ onSubmit, onClose, student }: StudentFormProps) => {
           )}
         </div>
         <div className="form-group" style={{ flex: 1 }}>
-          <label className="form-label">Class</label>
-          <input type="text" name="class" value={formData.class} onChange={handleChange} className="form-input" required />
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
+            <label className="form-label" style={{ marginBottom: 0 }}>
+              Class <span style={{ fontSize: 11, fontWeight: 400, color: 'var(--text-muted)' }}>(Optional)</span>
+            </label>
+            {isCustomClass ? (
+              <button
+                type="button"
+                onClick={() => {
+                  setIsCustomClass(false);
+                  setFormData(p => ({ ...p, class: '' }));
+                }}
+                className="btn btn-ghost btn-sm"
+                style={{ fontSize: 11, padding: '0 4px', height: 'auto', color: 'var(--accent-blue)' }}
+              >
+                Choose from list
+              </button>
+            ) : null}
+          </div>
+          {isCustomClass ? (
+            <input
+              type="text"
+              name="class"
+              value={formData.class}
+              onChange={handleChange}
+              placeholder="Enter custom class name"
+              className="form-input"
+            />
+          ) : (
+            <select
+              name="class"
+              value={formData.class}
+              onChange={handleClassSelectChange}
+              className="form-select"
+            >
+              <option value="">— Select Class (Optional) —</option>
+              {SCHOOL_CLASSES.map(cls => (
+                <option key={cls} value={cls}>
+                  {cls}
+                </option>
+              ))}
+              <option value="__custom__">+ Custom Class...</option>
+            </select>
+          )}
         </div>
       </div>
       <div className="form-group">
@@ -192,7 +252,7 @@ const DownloadListModal = ({ students, onClose, reportSettings }: DownloadListMo
                 <input type="checkbox" checked={selectedStudentIds.has(s.id)} onChange={() => toggleStudent(s.id)} style={{ accentColor: 'var(--accent-blue)' }} />
                 <div>
                   <p style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-primary)' }}>{s.name}</p>
-                  <p style={{ fontSize: 11, color: 'var(--text-muted)' }}>{s.class} &bull; Age {calculateAge(s.dob)}</p>
+                  <p style={{ fontSize: 11, color: 'var(--text-muted)' }}>{s.class || 'Unassigned'} &bull; Age {calculateAge(s.dob)}</p>
                 </div>
               </label>
             ))}
@@ -237,6 +297,7 @@ interface StudentProfilesProps {
 export const StudentProfiles = ({ students, setStudents, reportSettings, onDeleteStudent }: StudentProfilesProps) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isDownloadModalOpen, setIsDownloadModalOpen] = useState(false);
+  const [isUpgradeModalOpen, setIsUpgradeModalOpen] = useState(false);
   const [editingStudent, setEditingStudent] = useState<Student | null>(null);
   const [sortKey, setSortKey] = useState<'name' | 'age' | 'dob' | 'class'>('name');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
@@ -270,16 +331,28 @@ export const StudentProfiles = ({ students, setStudents, reportSettings, onDelet
   const openAddModal = () => { setEditingStudent(null); setIsModalOpen(true); };
   const openEditModal = (student: Student) => { setEditingStudent(student); setIsModalOpen(true); };
 
+  const handleApplyUpgrades = (updates: { studentId: string; newClass: string }[]) => {
+    const updateMap = new Map(updates.map(u => [u.studentId, u.newClass]));
+    setStudents(prev =>
+      prev.map(s => {
+        if (updateMap.has(s.id)) {
+          return { ...s, class: updateMap.get(s.id)! };
+        }
+        return s;
+      })
+    );
+  };
+
   const sortedStudents = useMemo(() => {
     const filtered = students.filter(s =>
       s.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      s.class.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (s.class || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
       s.yearOfRegistration.toString().includes(searchTerm)
     );
     const sorted = [...filtered].sort((a, b) => {
       if (sortKey === 'name') return a.name.localeCompare(b.name);
       if (sortKey === 'age' || sortKey === 'dob') return a.dob.localeCompare(b.dob);
-      if (sortKey === 'class') return a.class.localeCompare(b.class);
+      if (sortKey === 'class') return (a.class || '').localeCompare(b.class || '');
       return 0;
     });
     return sortOrder === 'desc' ? sorted.reverse() : sorted;
@@ -289,7 +362,18 @@ export const StudentProfiles = ({ students, setStudents, reportSettings, onDelet
     <div className="page-container">
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 12, marginBottom: 24 }}>
         <h1 className="page-title">Student Profiles</h1>
-        <div style={{ display: 'flex', gap: 8 }}>
+        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+          <button
+            onClick={() => setIsUpgradeModalOpen(true)}
+            className="btn"
+            style={{
+              background: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)',
+              color: '#fff',
+              boxShadow: '0 2px 8px rgba(37, 99, 235, 0.3)',
+            }}
+          >
+            <UpgradeIcon /> Upgrade Classes
+          </button>
           <button onClick={() => setIsDownloadModalOpen(true)} className="btn btn-success"><DownloadIcon /> Download</button>
           <button onClick={openAddModal} className="btn btn-primary"><PlusIcon /> Add Student</button>
         </div>
@@ -324,7 +408,7 @@ export const StudentProfiles = ({ students, setStudents, reportSettings, onDelet
               <div className="student-card-header">
                 <div>
                   <h2 className="student-name">{student.name}</h2>
-                  <p className="student-meta">Age: {age} yrs &bull; DOB: {student.dob}<br />Class: {student.class} &bull; Reg: {student.yearOfRegistration}</p>
+                  <p className="student-meta">Age: {age} yrs &bull; DOB: {student.dob || '—'}<br />Class: {student.class || 'Unassigned'} &bull; Reg: {student.yearOfRegistration}</p>
                 </div>
                 <div className="student-card-actions">
                   <button onClick={() => openEditModal(student)} title="Edit"><EditIcon /></button>
@@ -357,6 +441,14 @@ export const StudentProfiles = ({ students, setStudents, reportSettings, onDelet
 
       <Modal isOpen={isDownloadModalOpen} onClose={() => setIsDownloadModalOpen(false)} title="Download Student List" wide>
         <DownloadListModal students={students} onClose={() => setIsDownloadModalOpen(false)} reportSettings={reportSettings} />
+      </Modal>
+
+      <Modal isOpen={isUpgradeModalOpen} onClose={() => setIsUpgradeModalOpen(false)} title="Class Progression & Upgrades" wide>
+        <ClassUpgradeModal
+          students={students}
+          onClose={() => setIsUpgradeModalOpen(false)}
+          onApplyUpgrades={handleApplyUpgrades}
+        />
       </Modal>
     </div>
   );

@@ -1035,7 +1035,6 @@ body {
 /* --- Event Calendar --- */
 .calendar-grid {
     display: grid;
-    grid-cols: 7;
     grid-template-columns: repeat(7, 1fr);
     gap: 4px;
 }
