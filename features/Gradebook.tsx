@@ -127,7 +127,7 @@ export const Gradebook = ({ students, grades, setGrades, attendance, fees, repor
                         </button>
                         {/* PDF Preview/Edit Modal */}
                         {showPreview && previewData && (
-                            <Modal onClose={() => { setShowPreview(false); setPdfUrl(null); }} isOpen={true} title={"Preview & Edit Grade Report"}>
+                            <Modal onClose={() => { setShowPreview(false); setPdfUrl(null); }} isOpen={true} title={"Preview & Edit Grade Report"} wide>
                                 <div>
                                     <div style={{ marginBottom: 16 }}>
                                         <label className="form-label">Student Name</label>

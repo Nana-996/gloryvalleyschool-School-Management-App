@@ -315,8 +315,13 @@ export const StudentProfiles = ({ students, setStudents, reportSettings, onDelet
 
   const handleAddStudent = (studentData: Omit<Student, 'id'>) => {
     setStudents(prev => {
-      const highestId = prev.reduce((maxId, student) => { const currentId = parseInt(student.id.substring(1), 10); return currentId > maxId ? currentId : maxId; }, 0);
-      return [...prev, { ...studentData, id: `s${highestId + 1}` }];
+      const highestNum = prev.reduce((maxId, student) => {
+        const num = parseInt(student.id.replace(/\D/g, ''), 10);
+        return !isNaN(num) && num > maxId ? num : maxId;
+      }, 0);
+      const candidateId = `s${highestNum + 1}`;
+      const uniqueId = prev.some(s => s.id === candidateId) ? `s${Date.now()}` : candidateId;
+      return [...prev, { ...studentData, id: uniqueId }];
     });
     setIsModalOpen(false);
   };
@@ -329,7 +334,9 @@ export const StudentProfiles = ({ students, setStudents, reportSettings, onDelet
   };
 
   const handleDeleteStudent = (studentId: string) => {
-    if (window.confirm('Are you sure you want to delete this student? All associated fee and grade records will also be removed.')) {
+    const student = students.find(s => s.id === studentId);
+    const studentName = student ? `"${student.name}"` : 'this student';
+    if (window.confirm(`Are you sure you want to delete ${studentName}? All associated fee, grade, and attendance records will also be removed.`)) {
       if (typeof onDeleteStudent === 'function') {
         onDeleteStudent(studentId);
       } else {

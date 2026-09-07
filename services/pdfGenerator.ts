@@ -1,4 +1,10 @@
 import { Grade, Student, AttendanceRecord, AttendanceStatus, ReportSettings, Fee, calculateAge } from '../types';
+import jsPDF from 'jspdf';
+
+const createPDFDoc = (options?: any) => {
+  const Constructor = (typeof window !== 'undefined' && (window as any).jspdf?.jsPDF) || jsPDF;
+  return new (Constructor as any)(options);
+};
 
 const getGradeDetails = (score: number) => {
   const total = Number(score);
@@ -18,8 +24,7 @@ const hexToRgb = (hex: string): [number, number, number] => {
 };
 
 export const exportGradesToPDF = (student: Student, grades: Grade[], attendance: AttendanceRecord[], fees: Fee[], settings: ReportSettings) => {
-  const { jsPDF } = (window as any).jspdf;
-  const doc = new jsPDF();
+  const doc = createPDFDoc();
   const primaryColorRgb = hexToRgb(settings.primaryColor);
   let startY = 20;
 
@@ -176,8 +181,7 @@ export const exportGradesToPDF = (student: Student, grades: Grade[], attendance:
 };
 
 export const exportAttendanceToPDF = (student: Student, records: AttendanceRecord[], settings: ReportSettings) => {
-  const { jsPDF } = (window as any).jspdf;
-  const doc = new jsPDF();
+  const doc = createPDFDoc();
   const primaryColorRgb = hexToRgb(settings.primaryColor);
   let startY = 22;
 
@@ -259,8 +263,7 @@ export const exportAttendanceToPDF = (student: Student, records: AttendanceRecor
 
 
 export const exportFeesToPDF = (student: Student | null, fees: Fee[], settings: ReportSettings, students: Student[] = []) => {
-  const { jsPDF } = (window as any).jspdf;
-  const doc = new jsPDF();
+  const doc = createPDFDoc();
   const primaryColorRgb = hexToRgb(settings.primaryColor);
   let startY = 22;
 
@@ -388,8 +391,7 @@ export const exportStudentListToPDF = (
   selectedFields: string[],
   settings: ReportSettings
 ) => {
-  const { jsPDF } = (window as any).jspdf;
-  const doc = new jsPDF({ orientation: selectedFields.length > 5 ? 'landscape' : 'portrait' });
+  const doc = createPDFDoc({ orientation: selectedFields.length > 5 ? 'landscape' : 'portrait' });
   const primaryColorRgb = hexToRgb(settings.primaryColor);
   let startY = 20;
 

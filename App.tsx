@@ -70,13 +70,9 @@ const App = () => {
     font: 'helvetica',
   });
 
-  // Automatically prune orphaned fees, grades, and attendance if students were deleted
+  // Automatically prune orphaned fees, grades, and attendance if students were deleted (only if students exist)
   useEffect(() => {
-    if (students.length === 0) {
-      if (fees.length > 0) setFees([]);
-      if (grades.length > 0) setGrades([]);
-      if (attendance.length > 0) setAttendance([]);
-    } else {
+    if (students.length > 0) {
       const validIds = new Set(students.map((s) => s.id));
       const hasOrphanFees = fees.some((f) => !validIds.has(f.studentId));
       const hasOrphanGrades = grades.some((g) => !validIds.has(g.studentId));
