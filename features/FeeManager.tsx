@@ -1,7 +1,22 @@
 import React, { useState, useMemo } from 'react';
 import { exportFeesToPDF } from '../services/pdfGenerator';
 import { Student, Fee, ReportSettings, DailyExpense } from '../types';
-import { PlusIcon, DeleteIcon } from '../components/Icons';
+import {
+  PlusIcon,
+  DeleteIcon,
+  ChartBarIcon,
+  CreditCardIcon,
+  ReceiptIcon,
+  PDFIcon,
+  BanknotesIcon,
+  TrendingDownIcon,
+  WalletIcon,
+  DocumentTextIcon,
+  UserGroupIcon,
+  ClockIcon,
+  CheckIcon,
+  XIcon,
+} from '../components/Icons';
 
 interface FeeManagerProps {
   students: Student[];
@@ -175,11 +190,11 @@ const FeeManager: React.FC<FeeManagerProps> = ({ students, fees, setFees, report
 
   // --- Tab content renderers ---
 
-  const TABS: { key: FeeTab; label: string; icon: string }[] = [
-    { key: 'overview', label: 'Overview', icon: '📊' },
-    { key: 'record', label: 'Record Fee', icon: '💳' },
-    { key: 'expenses', label: 'Expenses', icon: '🧾' },
-    { key: 'reports', label: 'Reports', icon: '📄' },
+  const TABS: { key: FeeTab; label: string; icon: React.ReactNode }[] = [
+    { key: 'overview', label: 'Overview', icon: <ChartBarIcon /> },
+    { key: 'record', label: 'Record Fee', icon: <CreditCardIcon /> },
+    { key: 'expenses', label: 'Expenses', icon: <ReceiptIcon /> },
+    { key: 'reports', label: 'Reports', icon: <PDFIcon /> },
   ];
 
   // ===== OVERVIEW TAB =====
@@ -189,29 +204,29 @@ const FeeManager: React.FC<FeeManagerProps> = ({ students, fees, setFees, report
       <div className="fee-summary-grid">
         <div className="fee-stat-card fee-stat-income">
           <div className="fee-stat-icon">
-            <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" /></svg>
+            <BanknotesIcon />
           </div>
           <div>
             <p className="fee-stat-label">Today's Income</p>
-            <p className="fee-stat-value">₵{dailyFinancialSummary.totalMoneyAcquired.toFixed(2)}</p>
+            <p className="fee-stat-value">GH₵ {dailyFinancialSummary.totalMoneyAcquired.toFixed(2)}</p>
           </div>
         </div>
         <div className="fee-stat-card fee-stat-expense">
           <div className="fee-stat-icon">
-            <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="17 8 12 3 7 8" /><line x1="12" y1="3" x2="12" y2="15" /></svg>
+            <TrendingDownIcon />
           </div>
           <div>
             <p className="fee-stat-label">Today's Spending</p>
-            <p className="fee-stat-value">₵{dailyFinancialSummary.totalMoneySpent.toFixed(2)}</p>
+            <p className="fee-stat-value">GH₵ {dailyFinancialSummary.totalMoneySpent.toFixed(2)}</p>
           </div>
         </div>
         <div className="fee-stat-card fee-stat-balance">
           <div className="fee-stat-icon">
-            <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="5" width="20" height="14" rx="2" /><line x1="2" y1="10" x2="22" y2="10" /></svg>
+            <WalletIcon />
           </div>
           <div>
             <p className="fee-stat-label">Net Balance</p>
-            <p className="fee-stat-value">₵{dailyFinancialSummary.balanceRemaining.toFixed(2)}</p>
+            <p className="fee-stat-value">GH₵ {dailyFinancialSummary.balanceRemaining.toFixed(2)}</p>
           </div>
         </div>
       </div>
@@ -228,7 +243,7 @@ const FeeManager: React.FC<FeeManagerProps> = ({ students, fees, setFees, report
               {Object.values(dailyFinancialSummary.studentBreakdown).map(student => (
                 <div key={student.name} className="fee-breakdown-item">
                   <span className="fee-breakdown-name">{student.name}</span>
-                  <span className="fee-breakdown-amount fee-amount-income">₵{student.amount.toFixed(2)}</span>
+                  <span className="fee-breakdown-amount fee-amount-income">GH₵ {student.amount.toFixed(2)}</span>
                 </div>
               ))}
             </div>
@@ -244,7 +259,7 @@ const FeeManager: React.FC<FeeManagerProps> = ({ students, fees, setFees, report
               {dailyFinancialSummary.todayExpenses.map(expense => (
                 <div key={expense.id} className="fee-breakdown-item">
                   <span className="fee-breakdown-name">{expense.description}</span>
-                  <span className="fee-breakdown-amount fee-amount-expense">₵{expense.amount.toFixed(2)}</span>
+                  <span className="fee-breakdown-amount fee-amount-expense">GH₵ {expense.amount.toFixed(2)}</span>
                 </div>
               ))}
             </div>
@@ -254,9 +269,11 @@ const FeeManager: React.FC<FeeManagerProps> = ({ students, fees, setFees, report
 
       {(Object.keys(dailyFinancialSummary.studentBreakdown).length === 0 && dailyFinancialSummary.todayExpenses.length === 0) && (
         <div className="fee-empty-state">
-          <div className="fee-empty-icon">📋</div>
-          <p>No financial activity recorded for today.</p>
-          <p className="fee-empty-hint">Record a fee or expense to get started.</p>
+          <div className="fee-empty-icon">
+            <DocumentTextIcon className="w-8 h-8" />
+          </div>
+          <p style={{ fontWeight: 600, color: 'var(--text-primary)' }}>No financial activity recorded for today.</p>
+          <p className="fee-empty-hint" style={{ fontSize: 13, color: 'var(--text-muted)' }}>Record a fee or expense to get started.</p>
         </div>
       )}
 
@@ -294,17 +311,17 @@ const FeeManager: React.FC<FeeManagerProps> = ({ students, fees, setFees, report
         <div className="fee-student-summary">
           <div className="fee-mini-stat">
             <span className="fee-mini-label">Total Dues</span>
-            <span className="fee-mini-value fee-color-danger">₵{totalDues.toFixed(2)}</span>
+            <span className="fee-mini-value fee-color-danger">GH₵ {totalDues.toFixed(2)}</span>
           </div>
           <div className="fee-mini-divider"></div>
           <div className="fee-mini-stat">
             <span className="fee-mini-label">Total Paid</span>
-            <span className="fee-mini-value fee-color-success">₵{totalPaid.toFixed(2)}</span>
+            <span className="fee-mini-value fee-color-success">GH₵ {totalPaid.toFixed(2)}</span>
           </div>
           <div className="fee-mini-divider"></div>
           <div className="fee-mini-stat">
             <span className="fee-mini-label">Balance</span>
-            <span className="fee-mini-value fee-color-primary">₵{balance.toFixed(2)}</span>
+            <span className="fee-mini-value fee-color-primary">GH₵ {balance.toFixed(2)}</span>
           </div>
         </div>
 
@@ -330,20 +347,28 @@ const FeeManager: React.FC<FeeManagerProps> = ({ students, fees, setFees, report
                       <div className="fee-edit-inline">
                         <input type="date" value={editDate} onChange={e => setEditDate(e.target.value)} className="fee-input-sm" />
                         <input type="time" value={editTime} onChange={e => setEditTime(e.target.value)} className="fee-input-sm" />
-                        <button className="fee-btn-inline fee-btn-save" onClick={() => { const newDate = editDate && editTime ? `${editDate}T${editTime}` : editDate || fee.date; handleUpdateFee(fee.id, { date: newDate }); setEditingFeeId(null); }}>✓</button>
-                        <button className="fee-btn-inline fee-btn-cancel" onClick={() => setEditingFeeId(null)}>✕</button>
+                        <button className="fee-btn-inline fee-btn-save" onClick={() => { const newDate = editDate && editTime ? `${editDate}T${editTime}` : editDate || fee.date; handleUpdateFee(fee.id, { date: newDate }); setEditingFeeId(null); }} aria-label="Save"><CheckIcon size={12} /></button>
+                        <button className="fee-btn-inline fee-btn-cancel" onClick={() => setEditingFeeId(null)} aria-label="Cancel"><XIcon size={12} /></button>
                       </div>
                     ) : (
                       <span>{fee.date}</span>
                     )}
                   </td>
                   <td><span className="fee-desc-badge">{fee.description}</span></td>
-                  <td className="fee-amount-cell">₵{fee.totalAmount.toFixed(2)}</td>
-                  <td className="fee-amount-cell fee-color-success">₵{fee.amountPaid.toFixed(2)}</td>
-                  <td className="fee-amount-cell fee-color-primary">₵{Math.max(0, fee.totalAmount - fee.amountPaid).toFixed(2)}</td>
+                  <td className="fee-amount-cell">GH₵ {fee.totalAmount.toFixed(2)}</td>
+                  <td className="fee-amount-cell fee-color-success">GH₵ {fee.amountPaid.toFixed(2)}</td>
+                  <td className="fee-amount-cell fee-color-primary">GH₵ {Math.max(0, fee.totalAmount - fee.amountPaid).toFixed(2)}</td>
                   <td>
                     <span className={`fee-status-badge ${calculateStatus(fee) === 'Paid' ? 'fee-status-paid' : 'fee-status-owing'}`}>
-                      {calculateStatus(fee) === 'Paid' ? '✓ Paid' : `⏳ Owing`}
+                      {calculateStatus(fee) === 'Paid' ? (
+                        <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                          <CheckIcon className="w-3.5 h-3.5" /> Paid
+                        </span>
+                      ) : (
+                        <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                          <ClockIcon className="w-3.5 h-3.5" /> Owing
+                        </span>
+                      )}
                     </span>
                   </td>
                   <td>
@@ -377,7 +402,7 @@ const FeeManager: React.FC<FeeManagerProps> = ({ students, fees, setFees, report
     <div className="fee-tab-content">
       <div className="fee-form-card">
         <div className="fee-form-header">
-          <div className="fee-form-icon">💳</div>
+          <div className="fee-form-icon"><CreditCardIcon size={24} color="var(--primary)" /></div>
           <div>
             <h3 className="fee-form-title">Record a Payment</h3>
             <p className="fee-form-subtitle">Add a new fee transaction for a student</p>
@@ -415,7 +440,7 @@ const FeeManager: React.FC<FeeManagerProps> = ({ students, fees, setFees, report
           </div>
           <div className="fee-form-row">
             <div className="fee-form-group">
-              <label htmlFor="total-amount">Total Amount (₵)</label>
+              <label htmlFor="total-amount">Total Amount (GH₵)</label>
               <input
                 type="number"
                 id="total-amount"
@@ -428,7 +453,7 @@ const FeeManager: React.FC<FeeManagerProps> = ({ students, fees, setFees, report
               />
             </div>
             <div className="fee-form-group">
-              <label htmlFor="amount-paid">Amount Paid (₵)</label>
+              <label htmlFor="amount-paid">Amount Paid (GH₵)</label>
               <input
                 type="number"
                 id="amount-paid"
@@ -445,7 +470,7 @@ const FeeManager: React.FC<FeeManagerProps> = ({ students, fees, setFees, report
             <div className="fee-preview-bar">
               <div className="fee-preview-fill" style={{ width: `${Math.min(100, (amountPaid / totalAmount) * 100)}%` }}></div>
               <span className="fee-preview-text">
-                {amountPaid >= totalAmount ? '✓ Fully Paid' : `${((amountPaid / totalAmount) * 100).toFixed(0)}% Paid — ₵${Math.max(0, totalAmount - amountPaid).toFixed(2)} remaining`}
+                {amountPaid >= totalAmount ? '✓ Fully Paid' : `${((amountPaid / totalAmount) * 100).toFixed(0)}% Paid — GH₵ ${Math.max(0, totalAmount - amountPaid).toFixed(2)} remaining`}
               </span>
             </div>
           )}
@@ -488,7 +513,7 @@ const FeeManager: React.FC<FeeManagerProps> = ({ students, fees, setFees, report
               />
             </div>
             <div className="fee-form-group">
-              <label htmlFor="expense-amount">Amount (₵)</label>
+              <label htmlFor="expense-amount">Amount (GH₵)</label>
               <input
                 type="number"
                 id="expense-amount"
@@ -524,7 +549,7 @@ const FeeManager: React.FC<FeeManagerProps> = ({ students, fees, setFees, report
                   <tr key={expense.id}>
                     <td>{expense.date}</td>
                     <td><span className="fee-desc-badge fee-desc-expense">{expense.description}</span></td>
-                    <td className="fee-amount-cell fee-color-danger">₵{expense.amount.toFixed(2)}</td>
+                    <td className="fee-amount-cell fee-color-danger">GH₵ {expense.amount.toFixed(2)}</td>
                     <td>
                       <button className="fee-action-btn fee-action-delete" title="Delete" onClick={() => handleDeleteExpense(expense.id)}>
                         <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 13 6" /><path d="M12 6v8a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V6" /><path d="M7 6V4a1 1 0 0 1 1-1h0a1 1 0 0 1 1 1v2" /></svg>
@@ -550,7 +575,7 @@ const FeeManager: React.FC<FeeManagerProps> = ({ students, fees, setFees, report
         {/* All Students Report */}
         <div className="fee-report-card">
           <div className="fee-report-header">
-            <h3 className="fee-report-title">📊 All Students Report</h3>
+            <h3 className="fee-report-title" style={{ display: 'flex', alignItems: 'center', gap: 8 }}><ChartBarIcon size={20} color="var(--primary)" /> All Students Report</h3>
             <p className="fee-report-desc">Generate a comprehensive report for all students within a date range.</p>
           </div>
           <div className="fee-report-controls">
@@ -582,19 +607,19 @@ const FeeManager: React.FC<FeeManagerProps> = ({ students, fees, setFees, report
               <div className="fee-report-stats">
                 <div className="fee-report-stat-item">
                   <span className="fee-report-stat-label">Total Dues</span>
-                  <span className="fee-report-stat-value fee-color-danger">₵{financialReportSummary.totalDue.toFixed(2)}</span>
+                  <span className="fee-report-stat-value fee-color-danger">GH₵ {financialReportSummary.totalDue.toFixed(2)}</span>
                 </div>
                 <div className="fee-report-stat-item">
                   <span className="fee-report-stat-label">Total Paid</span>
-                  <span className="fee-report-stat-value fee-color-success">₵{financialReportSummary.totalPaid.toFixed(2)}</span>
+                  <span className="fee-report-stat-value fee-color-success">GH₵ {financialReportSummary.totalPaid.toFixed(2)}</span>
                 </div>
                 <div className="fee-report-stat-item">
                   <span className="fee-report-stat-label">Balance</span>
-                  <span className="fee-report-stat-value fee-color-primary">₵{financialReportSummary.balance.toFixed(2)}</span>
+                  <span className="fee-report-stat-value fee-color-primary">GH₵ {financialReportSummary.balance.toFixed(2)}</span>
                 </div>
                 <div className="fee-report-stat-item">
                   <span className="fee-report-stat-label">Expenses</span>
-                  <span className="fee-report-stat-value fee-color-warning">₵{financialReportSummary.totalExpenses.toFixed(2)}</span>
+                  <span className="fee-report-stat-value fee-color-warning">GH₵ {financialReportSummary.totalExpenses.toFixed(2)}</span>
                 </div>
               </div>
               <div className="fee-report-meta">
@@ -611,7 +636,7 @@ const FeeManager: React.FC<FeeManagerProps> = ({ students, fees, setFees, report
                     {Object.entries(financialReportSummary.expenseBreakdown).map(([desc, amount]) => (
                       <div key={desc} className="fee-breakdown-item">
                         <span className="fee-breakdown-name">{desc}</span>
-                        <span className="fee-breakdown-amount fee-amount-expense">₵{amount.toFixed(2)}</span>
+                        <span className="fee-breakdown-amount fee-amount-expense">GH₵ {amount.toFixed(2)}</span>
                       </div>
                     ))}
                   </div>
@@ -624,7 +649,10 @@ const FeeManager: React.FC<FeeManagerProps> = ({ students, fees, setFees, report
         {/* Individual Student Report */}
         <div className="fee-report-card">
           <div className="fee-report-header">
-            <h3 className="fee-report-title">👤 Individual Student Report</h3>
+            <h3 className="fee-report-title" style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+              <UserGroupIcon className="w-5 h-5 text-forest" />
+              Individual Student Report
+            </h3>
             <p className="fee-report-desc">Export fee history for a specific student.</p>
           </div>
           <div className="fee-report-controls">
@@ -653,7 +681,7 @@ const FeeManager: React.FC<FeeManagerProps> = ({ students, fees, setFees, report
               disabled={!selectedStudent || !rangeStart || !rangeEnd}
               className="fee-btn-secondary"
             >
-              <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: 6 }}><path d="M14 2H6a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2Z" /><path d="M14 2v4H8" /><path d="M10 12H8" /><path d="M12 9H8" /></svg>
+              <PDFIcon />
               Export Student PDF
             </button>
           </div>
@@ -667,15 +695,15 @@ const FeeManager: React.FC<FeeManagerProps> = ({ students, fees, setFees, report
                 <div className="fee-report-stats">
                   <div className="fee-report-stat-item">
                     <span className="fee-report-stat-label">Dues</span>
-                    <span className="fee-report-stat-value fee-color-danger">₵{rTotalDue.toFixed(2)}</span>
+                    <span className="fee-report-stat-value fee-color-danger">GH₵ {rTotalDue.toFixed(2)}</span>
                   </div>
                   <div className="fee-report-stat-item">
                     <span className="fee-report-stat-label">Paid</span>
-                    <span className="fee-report-stat-value fee-color-success">₵{rTotalPaid.toFixed(2)}</span>
+                    <span className="fee-report-stat-value fee-color-success">GH₵ {rTotalPaid.toFixed(2)}</span>
                   </div>
                   <div className="fee-report-stat-item">
                     <span className="fee-report-stat-label">Balance</span>
-                    <span className="fee-report-stat-value fee-color-primary">₵{rBalance.toFixed(2)}</span>
+                    <span className="fee-report-stat-value fee-color-primary">GH₵ {rBalance.toFixed(2)}</span>
                   </div>
                 </div>
                 <div className="fee-report-meta">

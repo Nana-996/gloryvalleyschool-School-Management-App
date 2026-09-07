@@ -135,9 +135,9 @@ export const exportGradesToPDF = (student: Student, grades: Grade[], attendance:
   doc.setFont(settings.font, 'bold');
   doc.text("FINANCIAL RECORD:", 14, finalY);
   doc.setFont(settings.font, 'normal');
-  doc.text(`Total Dues: ......... ₵${totalDue.toFixed(2)}`, 14, finalY + 7);
-  doc.text(`Total Paid: ......... ₵${totalPaid.toFixed(2)}`, 14, finalY + 14);
-  doc.text(`Balance: ......... ₵${balance.toFixed(2)}`, 14, finalY + 21);
+  doc.text(`Total Dues: ......... GH₵ ${totalDue.toFixed(2)}`, 14, finalY + 7);
+  doc.text(`Total Paid: ......... GH₵ ${totalPaid.toFixed(2)}`, 14, finalY + 14);
+  doc.text(`Balance: ......... GH₵ ${balance.toFixed(2)}`, 14, finalY + 21);
   finalY += 30;
 
   doc.setFont(settings.font, 'bold');
@@ -319,18 +319,18 @@ export const exportFeesToPDF = (student: Student | null, fees: Fee[], settings: 
       ? [
         fee.date,
         fee.description,
-        `₵${fee.totalAmount.toFixed(2)}`,
-        `₵${fee.amountPaid.toFixed(2)}`,
-        `₵${balance.toFixed(2)}`,
+        `GH₵ ${fee.totalAmount.toFixed(2)}`,
+        `GH₵ ${fee.amountPaid.toFixed(2)}`,
+        `GH₵ ${balance.toFixed(2)}`,
         status,
       ]
       : [
         fee.date,
         studentName,
         fee.description,
-        `₵${fee.totalAmount.toFixed(2)}`,
-        `₵${fee.amountPaid.toFixed(2)}`,
-        `₵${balance.toFixed(2)}`,
+        `GH₵ ${fee.totalAmount.toFixed(2)}`,
+        `GH₵ ${fee.amountPaid.toFixed(2)}`,
+        `GH₵ ${balance.toFixed(2)}`,
         status,
       ];
 
@@ -352,9 +352,9 @@ export const exportFeesToPDF = (student: Student | null, fees: Fee[], settings: 
   doc.setFontSize(14);
   doc.text('Summary', 14, finalY + 15);
   doc.setFontSize(10);
-  doc.text(`Total Dues: ₵${totalDue.toFixed(2)}`, 14, finalY + 22);
-  doc.text(`Total Paid: ₵${totalPaid.toFixed(2)}`, 14, finalY + 28);
-  doc.text(`Balance: ₵${balance.toFixed(2)}`, 14, finalY + 34);
+  doc.text(`Total Dues: GH₵ ${totalDue.toFixed(2)}`, 14, finalY + 22);
+  doc.text(`Total Paid: GH₵ ${totalPaid.toFixed(2)}`, 14, finalY + 28);
+  doc.text(`Balance: GH₵ ${balance.toFixed(2)}`, 14, finalY + 34);
 
   const filename = student
     ? `${student.name}_fee_report.pdf`

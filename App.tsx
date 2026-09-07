@@ -24,6 +24,9 @@ import {
   SettingsIcon,
   MenuIcon,
   XIcon,
+  ApplicationsIcon,
+  ChartBarIcon,
+  CheckCircleIcon,
 } from './components/Icons';
 
 type Tab = 'Dashboard' | 'Students' | 'Attendance' | 'Gradebook' | 'Fees' | 'FinancialReport' | 'Calendar' | 'Settings' | 'Applications';
@@ -42,10 +45,10 @@ const TABS: { name: Tab; icon: React.ReactNode; label: string }[] = [
   { name: 'Attendance', icon: <CheckBadgeIcon />, label: 'Attendance' },
   { name: 'Gradebook', icon: <BookOpenIcon />, label: 'Gradebook' },
   { name: 'Fees', icon: <CreditCardIcon />, label: 'Fees' },
-  { name: 'FinancialReport', icon: <CreditCardIcon />, label: 'Finance' },
+  { name: 'FinancialReport', icon: <ChartBarIcon />, label: 'Finance' },
   { name: 'Calendar', icon: <CalendarIcon />, label: 'Calendar' },
   { name: 'Settings', icon: <SettingsIcon />, label: 'Settings' },
-  { name: 'Applications', icon: <UserGroupIcon />, label: 'Applications' },
+  { name: 'Applications', icon: <ApplicationsIcon />, label: 'Applications' },
 ];
 
 const App = () => {
@@ -63,7 +66,7 @@ const App = () => {
   const [events, setEvents] = useSyncedState<SchoolEvent[]>('events', []);
   const [reportSettings, setReportSettings] = useSyncedState<ReportSettings>('reportSettings', {
     logo: '/logo.png',
-    primaryColor: '#162939',
+    primaryColor: '#064E3B',
     font: 'helvetica',
   });
 
@@ -208,8 +211,11 @@ const App = () => {
       {/* Toast Notification for Device Pairing */}
       {pairingNotice && (
         <div className="pairing-toast-notification">
-          <span>✨ {pairingNotice}</span>
-          <button type="button" onClick={() => setPairingNotice(null)}>✕</button>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <CheckCircleIcon className="w-5 h-5" style={{ color: '#FBBF24' }} />
+            <span>{pairingNotice}</span>
+          </div>
+          <button type="button" onClick={() => setPairingNotice(null)} aria-label="Dismiss"><XIcon size={16} /></button>
         </div>
       )}
 

@@ -1,7 +1,17 @@
 import React, { useState, useMemo } from 'react';
 import { Student, ReportSettings, calculateAge } from '../types';
 import { Modal } from '../components/Modal';
-import { EditIcon, DeleteIcon, PlusIcon, SortAscendingIcon, SortDescendingIcon, DownloadIcon, UpgradeIcon } from '../components/Icons';
+import {
+  EditIcon,
+  DeleteIcon,
+  PlusIcon,
+  SortAscendingIcon,
+  SortDescendingIcon,
+  DownloadIcon,
+  UpgradeIcon,
+  PhoneIcon,
+  UserGroupIcon,
+} from '../components/Icons';
 import { STUDENT_FIELD_OPTIONS, exportStudentListToPDF } from '../services/pdfGenerator';
 import { SCHOOL_CLASSES, normalizeClassName } from '../constants';
 import { ClassUpgradeModal } from '../components/ClassUpgradeModal';
@@ -277,8 +287,8 @@ const DownloadListModal = ({ students, onClose, reportSettings }: DownloadListMo
 
       <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8 }}>
         <button type="button" onClick={onClose} className="btn btn-secondary">Cancel</button>
-        <button type="button" onClick={handleDownload} disabled={selectedStudentIds.size === 0 || selectedFields.size === 0} className="btn btn-success">
-          <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24"><path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2" /><path d="M7 11l5 5 5-5" /><path d="M12 4v12" /></svg>
+        <button type="button" onClick={handleDownload} disabled={selectedStudentIds.size === 0 || selectedFields.size === 0} className="btn btn-primary">
+          <DownloadIcon />
           Download PDF
         </button>
       </div>
@@ -365,16 +375,11 @@ export const StudentProfiles = ({ students, setStudents, reportSettings, onDelet
         <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
           <button
             onClick={() => setIsUpgradeModalOpen(true)}
-            className="btn"
-            style={{
-              background: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)',
-              color: '#fff',
-              boxShadow: '0 2px 8px rgba(37, 99, 235, 0.3)',
-            }}
+            className="btn btn-amber"
           >
             <UpgradeIcon /> Upgrade Classes
           </button>
-          <button onClick={() => setIsDownloadModalOpen(true)} className="btn btn-success"><DownloadIcon /> Download</button>
+          <button onClick={() => setIsDownloadModalOpen(true)} className="btn btn-secondary"><DownloadIcon /> Download List</button>
           <button onClick={openAddModal} className="btn btn-primary"><PlusIcon /> Add Student</button>
         </div>
       </div>
@@ -419,7 +424,11 @@ export const StudentProfiles = ({ students, setStudents, reportSettings, onDelet
                 {parentInfo.map((entry, i) => (
                   <div key={i} className="student-contact-row">
                     <span className="student-contact-label">{entry.label}:</span> {entry.name}
-                    {entry.phone && <div className="student-contact-phone">📞 {entry.phone}</div>}
+                    {entry.phone && (
+                      <div className="student-contact-phone">
+                        <PhoneIcon /> {entry.phone}
+                      </div>
+                    )}
                   </div>
                 ))}
               </div>
@@ -430,8 +439,11 @@ export const StudentProfiles = ({ students, setStudents, reportSettings, onDelet
 
       {students.length === 0 && (
         <div className="empty-state">
-          <div className="empty-icon">👤</div>
-          <p>No students found. Click "Add Student" to begin.</p>
+          <div className="empty-icon">
+            <UserGroupIcon className="w-8 h-8" />
+          </div>
+          <p style={{ fontWeight: 600, color: 'var(--text-primary)' }}>No students enrolled</p>
+          <p style={{ fontSize: 13, color: 'var(--text-muted)', marginTop: 4 }}>Click "Add Student" above to begin.</p>
         </div>
       )}
 

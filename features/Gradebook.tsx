@@ -289,10 +289,10 @@ export const Gradebook = ({ students, grades, setGrades, attendance, fees, repor
 
                                                 let finalY = (doc as any).lastAutoTable.finalY + 15;
 
-                                                // Attendance & Conduct
                                                 const studentAttendance = attendance.filter((a: any) => a.studentId === student.id);
                                                 const presentCount = studentAttendance.filter((r: any) => r.status === 'Present' || r.status === 'Late').length;
                                                 const absentCount = studentAttendance.filter((r: any) => r.status === 'Absent').length;
+
                                                 doc.setFontSize(12);
                                                 doc.setFont(settings.font, 'bold');
                                                 doc.text("ATTENDANCE RECORD:", 14, finalY);
@@ -301,7 +301,6 @@ export const Gradebook = ({ students, grades, setGrades, attendance, fees, repor
                                                 doc.text(`No. of Days Absent: ......... ${absentCount}`, doc.internal.pageSize.getWidth() / 2 + 10, finalY + 7);
                                                 finalY += 20;
 
-                                                // Add Fees Information
                                                 const studentFees = fees.filter((f: any) => f.studentId === student.id);
                                                 const totalPaid = studentFees.reduce((sum: number, f: any) => sum + f.amountPaid, 0);
                                                 const totalDue = studentFees.reduce((sum: number, f: any) => sum + f.totalAmount, 0);
@@ -310,9 +309,9 @@ export const Gradebook = ({ students, grades, setGrades, attendance, fees, repor
                                                 doc.setFont(settings.font, 'bold');
                                                 doc.text("FINANCIAL RECORD:", 14, finalY);
                                                 doc.setFont(settings.font, 'normal');
-                                                doc.text(`Total Dues: ......... ₵${totalDue.toFixed(2)}`, 14, finalY + 7);
-                                                doc.text(`Total Paid: ......... ₵${totalPaid.toFixed(2)}`, 14, finalY + 14);
-                                                doc.text(`Balance: ......... ₵${balance.toFixed(2)}`, 14, finalY + 21);
+                                                doc.text(`Total Dues: ......... GH₵ ${totalDue.toFixed(2)}`, 14, finalY + 7);
+                                                doc.text(`Total Paid: ......... GH₵ ${totalPaid.toFixed(2)}`, 14, finalY + 14);
+                                                doc.text(`Balance: ......... GH₵ ${balance.toFixed(2)}`, 14, finalY + 21);
                                                 finalY += 30;
 
                                                 doc.setFont(settings.font, 'bold');

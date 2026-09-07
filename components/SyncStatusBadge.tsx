@@ -26,7 +26,6 @@ export const SyncStatusBadge: React.FC<SyncStatusBadgeProps> = ({ onClick, compa
   const getStatusDetails = () => {
     if (!syncState.isConfigured || syncState.status === 'setup_required') {
       return {
-        icon: '🔴',
         dotClass: 'sync-dot offline',
         text: compact ? 'Not Synced' : 'Key Required',
         tooltip: 'Supabase API key is missing in services/supabaseConfig.ts. Data is saving locally only.',
@@ -37,7 +36,6 @@ export const SyncStatusBadge: React.FC<SyncStatusBadgeProps> = ({ onClick, compa
     switch (syncState.status) {
       case 'syncing':
         return {
-          icon: '🔄',
           dotClass: 'sync-dot syncing',
           text: compact ? 'Syncing' : 'Syncing...',
           tooltip: 'Syncing changes to Supabase Cloud...',
@@ -45,7 +43,6 @@ export const SyncStatusBadge: React.FC<SyncStatusBadgeProps> = ({ onClick, compa
         };
       case 'offline':
         return {
-          icon: '🟡',
           dotClass: 'sync-dot offline',
           text: compact ? 'Offline' : syncState.pendingSyncCount > 0 ? `Offline (${syncState.pendingSyncCount})` : 'Offline (Saved)',
           tooltip: 'Working offline. Changes are saved locally and will auto-sync when online.',
@@ -53,7 +50,6 @@ export const SyncStatusBadge: React.FC<SyncStatusBadgeProps> = ({ onClick, compa
         };
       case 'error':
         return {
-          icon: '🔴',
           dotClass: 'sync-dot offline',
           text: compact ? 'Retry' : 'Sync Alert',
           tooltip: syncState.errorMessage || 'Sync issue detected. Click to diagnose.',
@@ -63,7 +59,6 @@ export const SyncStatusBadge: React.FC<SyncStatusBadgeProps> = ({ onClick, compa
       case 'ready':
       default:
         return {
-          icon: '🟢',
           dotClass: 'sync-dot synced',
           text: compact ? 'Live' : 'Live Synced',
           tooltip: syncState.lastSyncedAt

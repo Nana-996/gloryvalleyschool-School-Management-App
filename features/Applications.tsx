@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { Student } from '../types';
 import { useSyncedState } from '../hooks/useSyncedState';
+import { RefreshIcon, CheckCircleIcon, UserPlusIcon, ApplicationsIcon } from '../components/Icons';
 
 const PROXY_ENDPOINT = '/api/get-applications';
 
@@ -136,7 +137,8 @@ export const Applications: React.FC<ApplicationsProps> = ({ onApprove }) => {
           className="btn-refresh"
           disabled={loading}
         >
-          {loading ? 'Loading...' : 'Refresh'}
+          <RefreshIcon className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
+          {loading ? 'Scanning...' : 'Refresh'}
         </button>
       </div>
 
@@ -159,7 +161,13 @@ export const Applications: React.FC<ApplicationsProps> = ({ onApprove }) => {
       {error && (<div className="error-state">{error}</div>)}
 
       {!loading && !error && applications.length === 0 && (
-        <div className="empty-state">No new applications yet.</div>
+        <div className="empty-state">
+          <div className="empty-icon">
+            <ApplicationsIcon className="w-8 h-8" />
+          </div>
+          <p style={{ fontWeight: 600, color: 'var(--text-primary)' }}>No new applications</p>
+          <p style={{ fontSize: 13, color: 'var(--text-muted)', marginTop: 4 }}>New enrollment submissions will appear here automatically.</p>
+        </div>
       )}
 
       {!loading && !error && applications.length > 0 && (
@@ -243,13 +251,16 @@ export const Applications: React.FC<ApplicationsProps> = ({ onApprove }) => {
 
                 <div className="app-card-footer">
                   {isApproved ? (
-                    <span className="status-approved">Approved</span>
+                    <span className="status-approved">
+                      <CheckCircleIcon className="w-4 h-4" /> Approved & Enrolled
+                    </span>
                   ) : (
                     <button
                       className="btn-approve"
                       onClick={() => handleApprove(app)}
+                      style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}
                     >
-                      Approve & Enroll Student
+                      <UserPlusIcon className="w-4 h-4" /> Approve & Enroll Student
                     </button>
                   )}
                 </div>

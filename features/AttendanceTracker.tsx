@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { Student, AttendanceRecord, AttendanceStatus, ReportSettings } from '../types';
 import { exportAttendanceToPDF } from '../services/pdfGenerator';
-import { PDFIcon } from '../components/Icons';
+import { PDFIcon, SearchIcon, CalendarIcon } from '../components/Icons';
 
 interface AttendanceTrackerProps {
   students: Student[];

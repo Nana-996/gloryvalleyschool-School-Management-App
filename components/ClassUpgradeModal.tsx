@@ -6,6 +6,15 @@ import {
   getPreviousClass,
   normalizeClassName,
 } from '../constants';
+import {
+  GraduationCapIcon,
+  ArrowUpCircleIcon,
+  PauseCircleIcon,
+  ArrowDownCircleIcon,
+  RefreshIcon,
+  EditIcon,
+  CheckIcon,
+} from './Icons';
 
 interface ClassUpgradeModalProps {
   students: Student[];
@@ -231,8 +240,9 @@ export const ClassUpgradeModal: React.FC<ClassUpgradeModalProps> = ({
         }}
       >
         <div>
-          <h3 style={{ fontSize: 14, fontWeight: 700, color: 'var(--text-primary)', marginBottom: 2 }}>
-            🎓 Class Progression & Upgrade Manager
+          <h3 style={{ fontSize: 15, fontWeight: 700, color: 'var(--color-forest)', marginBottom: 2, display: 'flex', alignItems: 'center', gap: 8 }}>
+            <GraduationCapIcon className="w-5 h-5 text-forest" />
+            Class Progression & Upgrade Manager
           </h3>
           <p style={{ fontSize: 12, color: 'var(--text-muted)' }}>
             Promote students to the next class, select students who will repeat (stay in current class), or demote students.
@@ -301,42 +311,42 @@ export const ClassUpgradeModal: React.FC<ClassUpgradeModalProps> = ({
             onClick={() => handleBulkAction('promote')}
             className="btn btn-sm"
             style={{
-              background: 'rgba(52, 211, 153, 0.15)',
-              color: 'var(--accent-emerald)',
-              border: '1px solid rgba(52, 211, 153, 0.3)',
+              background: 'var(--color-forest-light)',
+              color: 'var(--color-forest)',
+              border: '1px solid rgba(6, 78, 59, 0.25)',
               fontWeight: 600,
             }}
             title="Set all visible students to Promote"
           >
-            🚀 Promote All
+            <ArrowUpCircleIcon className="w-4 h-4" /> Promote All
           </button>
           <button
             type="button"
             onClick={() => handleBulkAction('retain')}
             className="btn btn-sm"
             style={{
-              background: 'rgba(251, 191, 36, 0.15)',
-              color: 'var(--accent-amber)',
-              border: '1px solid rgba(251, 191, 36, 0.3)',
+              background: 'var(--color-amber-light)',
+              color: 'var(--color-amber-dark)',
+              border: '1px solid var(--color-amber-border)',
               fontWeight: 600,
             }}
             title="Set all visible students to Repeat / No Promotion"
           >
-            ⏸️ Repeat All
+            <PauseCircleIcon className="w-4 h-4" /> Repeat All
           </button>
           <button
             type="button"
             onClick={() => handleBulkAction('demote')}
             className="btn btn-sm"
             style={{
-              background: 'rgba(244, 63, 94, 0.12)',
-              color: 'var(--accent-rose)',
-              border: '1px solid rgba(244, 63, 94, 0.3)',
+              background: '#FEE2E2',
+              color: '#B91C1C',
+              border: '1px solid rgba(220, 38, 38, 0.25)',
               fontWeight: 600,
             }}
             title="Set all visible students to Demote"
           >
-            🔻 Demote All
+            <ArrowDownCircleIcon className="w-4 h-4" /> Demote All
           </button>
           <button
             type="button"
@@ -345,7 +355,7 @@ export const ClassUpgradeModal: React.FC<ClassUpgradeModalProps> = ({
             style={{ fontSize: 12 }}
             title="Reset to default"
           >
-            ↺ Reset
+            <RefreshIcon className="w-3.5 h-3.5" /> Reset
           </button>
         </div>
       </div>
@@ -365,21 +375,21 @@ export const ClassUpgradeModal: React.FC<ClassUpgradeModalProps> = ({
         }}
       >
         <span style={{ color: 'var(--text-muted)' }}>Showing {filteredStudents.length} students:</span>
-        <span className="badge badge-green" style={{ fontSize: 11 }}>
-          🚀 {summaryCounts.promoteCount} To Promote
+        <span className="badge badge-forest" style={{ fontSize: 11 }}>
+          <ArrowUpCircleIcon className="w-3.5 h-3.5" /> {summaryCounts.promoteCount} To Promote
         </span>
         <span className="badge badge-amber" style={{ fontSize: 11 }}>
-          ⏸️ {summaryCounts.retainCount} Won't Be Promoted
+          <PauseCircleIcon className="w-3.5 h-3.5" /> {summaryCounts.retainCount} Won't Be Promoted
         </span>
         <span className="badge badge-red" style={{ fontSize: 11 }}>
-          🔻 {summaryCounts.demoteCount} To Demote
+          <ArrowDownCircleIcon className="w-3.5 h-3.5" /> {summaryCounts.demoteCount} To Demote
         </span>
         {summaryCounts.customCount > 0 && (
           <span className="badge badge-blue" style={{ fontSize: 11 }}>
-            ✏️ {summaryCounts.customCount} Custom
+            <EditIcon className="w-3.5 h-3.5" /> {summaryCounts.customCount} Custom
           </span>
         )}
-        <span style={{ marginLeft: 'auto', fontWeight: 600, color: 'var(--accent-blue)' }}>
+        <span style={{ marginLeft: 'auto', fontWeight: 600, color: 'var(--color-forest)' }}>
           {allChangedUpdates.length} total changes ready to apply
         </span>
       </div>
@@ -496,7 +506,9 @@ export const ClassUpgradeModal: React.FC<ClassUpgradeModalProps> = ({
                           }}
                           title="Promote to next class"
                         >
-                          🚀 Promote
+                          <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                            <ArrowUpCircleIcon size={13} /> Promote
+                          </span>
                         </button>
 
                         {/* Retain / Repeat */}
@@ -519,7 +531,9 @@ export const ClassUpgradeModal: React.FC<ClassUpgradeModalProps> = ({
                           }}
                           title="Do not promote (Repeat current class)"
                         >
-                          ⏸️ Don't Promote
+                          <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                            <PauseCircleIcon size={13} /> Don't Promote
+                          </span>
                         </button>
 
                         {/* Demote */}
@@ -539,7 +553,9 @@ export const ClassUpgradeModal: React.FC<ClassUpgradeModalProps> = ({
                           }}
                           title="Demote to previous class"
                         >
-                          🔻 Demote
+                          <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                            <ArrowDownCircleIcon size={13} /> Demote
+                          </span>
                         </button>
                       </div>
                     </td>
@@ -716,9 +732,9 @@ export const ClassUpgradeModal: React.FC<ClassUpgradeModalProps> = ({
               <button
                 type="button"
                 onClick={handleConfirmSave}
-                className="btn btn-success"
+                className="btn btn-primary"
               >
-                ✓ Yes, Apply Upgrades
+                <CheckIcon className="w-4 h-4" /> Yes, Apply Upgrades
               </button>
             </div>
           </div>

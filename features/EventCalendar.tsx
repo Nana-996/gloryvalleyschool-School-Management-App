@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { SchoolEvent } from '../types';
 import { Modal } from '../components/Modal';
-import { PlusIcon } from '../components/Icons';
+import { PlusIcon, ChevronLeftIcon, ChevronRightIcon, CalendarIcon } from '../components/Icons';
 
 const daysInMonth = (year: number, month: number) => new Date(year, month + 1, 0).getDate();
 const firstDayOfMonth = (year: number, month: number) => new Date(year, month, 1).getDay();
@@ -89,9 +89,13 @@ export const EventCalendar = ({ events, setEvents }: EventCalendarProps) => {
 
       <div className="card">
         <div className="calendar-nav">
-          <button onClick={() => changeMonth(-1)} className="calendar-nav-btn">&lt;</button>
+          <button onClick={() => changeMonth(-1)} className="calendar-nav-btn" aria-label="Previous month">
+            <ChevronLeftIcon className="w-4 h-4" />
+          </button>
           <h2 className="calendar-month">{monthNames[month]} {year}</h2>
-          <button onClick={() => changeMonth(1)} className="calendar-nav-btn">&gt;</button>
+          <button onClick={() => changeMonth(1)} className="calendar-nav-btn" aria-label="Next month">
+            <ChevronRightIcon className="w-4 h-4" />
+          </button>
         </div>
 
         {/* Mobile: List */}
@@ -105,7 +109,7 @@ export const EventCalendar = ({ events, setEvents }: EventCalendarProps) => {
               <div>
                 <p className="event-title">{event.title}</p>
                 <p className="event-desc">{event.description}</p>
-                <span className={`badge ${event.type === 'Exam' ? 'badge-red' : event.type === 'Holiday' ? 'badge-green' : 'badge-blue'}`}>{event.type}</span>
+                <span className={`badge ${event.type === 'Exam' ? 'badge-red' : event.type === 'Holiday' ? 'badge-amber' : 'badge-forest'}`}>{event.type}</span>
               </div>
             </div>
           )) : <p style={{ textAlign: 'center', color: 'var(--text-muted)', padding: '32px 0' }}>No events this month.</p>}

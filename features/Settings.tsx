@@ -6,6 +6,7 @@ import {
   isConfigValid,
   getActiveConfig,
 } from '../services/cloudSync';
+import { CloudSyncIcon, CheckCircleIcon, AlertCircleIcon, ChartBarIcon, CheckIcon } from '../components/Icons';
 
 interface SettingsProps {
   settings: ReportSettings;
@@ -80,8 +81,14 @@ export const Settings = ({ settings, setSettings, onOpenCloudSync }: SettingsPro
       >
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 16, marginBottom: 16 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-            <div style={{ fontSize: 28 }}>
-              {syncState.status === 'syncing' ? '🔄' : syncState.status === 'offline' ? '🟡' : '🟢'}
+            <div style={{ width: 40, height: 40, borderRadius: 12, background: 'var(--bg-surface)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              {syncState.status === 'syncing' ? (
+                <CloudSyncIcon className="w-6 h-6 text-amber" />
+              ) : syncState.status === 'offline' ? (
+                <AlertCircleIcon className="w-6 h-6" style={{ color: '#F59E0B' }} />
+              ) : (
+                <CheckCircleIcon className="w-6 h-6" style={{ color: 'var(--color-forest)' }} />
+              )}
             </div>
             <div>
               <h2 style={{ fontSize: 16, fontWeight: 700, color: 'var(--text-primary)' }}>
@@ -98,7 +105,7 @@ export const Settings = ({ settings, setSettings, onOpenCloudSync }: SettingsPro
               onClick={onOpenCloudSync}
               className="btn btn-secondary btn-sm"
             >
-              📊 View Sync Status
+              <ChartBarIcon /> View Sync Status
             </button>
           </div>
         </div>
@@ -172,7 +179,7 @@ export const Settings = ({ settings, setSettings, onOpenCloudSync }: SettingsPro
           </div>
 
           <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: 12, paddingTop: 8 }}>
-            {isSaved && <span className="text-green" style={{ fontSize: 13 }}>✓ Settings saved!</span>}
+            {isSaved && <span className="text-green" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 13 }}><CheckIcon size={14} /> Settings saved!</span>}
             <button type="submit" className="btn btn-primary">Save Settings</button>
           </div>
         </form>
