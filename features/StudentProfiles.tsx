@@ -13,7 +13,7 @@ import {
   UserGroupIcon,
 } from '../components/Icons';
 import { STUDENT_FIELD_OPTIONS, exportStudentListToPDF } from '../services/pdfGenerator';
-import { SCHOOL_CLASSES, normalizeClassName } from '../constants';
+import { SCHOOL_CLASSES, normalizeClassName, capitalizeWords } from '../constants';
 import { ClassUpgradeModal } from '../components/ClassUpgradeModal';
 
 interface StudentFormProps {
@@ -44,7 +44,9 @@ const StudentForm = ({ onSubmit, onClose, student }: StudentFormProps) => {
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
+    const nameFields = ['name', 'motherName', 'fatherName', 'guardianName'];
+    const formattedValue = nameFields.includes(name) ? capitalizeWords(value) : value;
+    setFormData(prev => ({ ...prev, [name]: formattedValue }));
   };
 
   const handleClassSelectChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
@@ -64,7 +66,13 @@ const StudentForm = ({ onSubmit, onClose, student }: StudentFormProps) => {
       alert("Please provide at least one of: Mother's Name, Father's Name, or Guardian's Name.");
       return;
     }
-    onSubmit(formData);
+    onSubmit({
+      ...formData,
+      name: capitalizeWords(formData.name.trim()),
+      motherName: capitalizeWords(formData.motherName.trim()),
+      fatherName: capitalizeWords(formData.fatherName.trim()),
+      guardianName: capitalizeWords(formData.guardianName.trim()),
+    });
   };
 
   const hasParent = formData.motherName.trim() || formData.fatherName.trim();
@@ -74,7 +82,16 @@ const StudentForm = ({ onSubmit, onClose, student }: StudentFormProps) => {
     <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
       <div className="form-group">
         <label className="form-label">Name</label>
-        <input type="text" name="name" value={formData.name} onChange={handleChange} className="form-input" required />
+        <input
+          type="text"
+          name="name"
+          value={formData.name}
+          onChange={handleChange}
+          className="form-input"
+          style={{ textTransform: 'capitalize' }}
+          placeholder="e.g. Kwame Mensah"
+          required
+        />
       </div>
       <div className="form-row">
         <div className="form-group" style={{ flex: 1 }}>
@@ -148,7 +165,15 @@ const StudentForm = ({ onSubmit, onClose, student }: StudentFormProps) => {
           <div className="form-row">
             <div className="form-group" style={{ flex: 1 }}>
               <label className="form-label">Name</label>
-              <input type="text" name="motherName" value={formData.motherName} onChange={handleChange} className="form-input" placeholder="Leave blank if absent" />
+              <input
+                type="text"
+                name="motherName"
+                value={formData.motherName}
+                onChange={handleChange}
+                className="form-input"
+                style={{ textTransform: 'capitalize' }}
+                placeholder="Leave blank if absent"
+              />
             </div>
             <div className="form-group" style={{ flex: 1 }}>
               <label className="form-label">Phone</label>
@@ -163,7 +188,15 @@ const StudentForm = ({ onSubmit, onClose, student }: StudentFormProps) => {
           <div className="form-row">
             <div className="form-group" style={{ flex: 1 }}>
               <label className="form-label">Name</label>
-              <input type="text" name="fatherName" value={formData.fatherName} onChange={handleChange} className="form-input" placeholder="Leave blank if absent" />
+              <input
+                type="text"
+                name="fatherName"
+                value={formData.fatherName}
+                onChange={handleChange}
+                className="form-input"
+                style={{ textTransform: 'capitalize' }}
+                placeholder="Leave blank if absent"
+              />
             </div>
             <div className="form-group" style={{ flex: 1 }}>
               <label className="form-label">Phone</label>
@@ -182,7 +215,15 @@ const StudentForm = ({ onSubmit, onClose, student }: StudentFormProps) => {
           <div className="form-row">
             <div className="form-group" style={{ flex: 1 }}>
               <label className="form-label">Name</label>
-              <input type="text" name="guardianName" value={formData.guardianName} onChange={handleChange} className="form-input" placeholder={hasParent ? 'Optional' : 'Required'} />
+              <input
+                type="text"
+                name="guardianName"
+                value={formData.guardianName}
+                onChange={handleChange}
+                className="form-input"
+                style={{ textTransform: 'capitalize' }}
+                placeholder={hasParent ? 'Optional' : 'Required'}
+              />
             </div>
             <div className="form-group" style={{ flex: 1 }}>
               <label className="form-label">Phone</label>
@@ -313,7 +354,39 @@ export const StudentProfiles = ({ students, setStudents, reportSettings, onDelet
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
   const [searchTerm, setSearchTerm] = useState('');
 
+  // Automatically ensure all student names begin with a capital letter
+  React.useEffect(() => {
+    if (students.length > 0) {
+      const hasUncapitalized = students.some(
+        s => s.name !== capitalizeWords(s.name) ||
+             (s.motherName && s.motherName !== capitalizeWords(s.motherName)) ||
+             (s.fatherName && s.fatherName !== capitalizeWords(s.fatherName)) ||
+             (s.guardianName && s.guardianName !== capitalizeWords(s.guardianName))
+      );
+      if (hasUncapitalized) {
+        setStudents(prev =>
+          prev.map(s => ({
+            ...s,
+            name: capitalizeWords(s.name),
+            motherName: capitalizeWords(s.motherName),
+            fatherName: capitalizeWords(s.fatherName),
+            guardianName: capitalizeWords(s.guardianName),
+          }))
+        );
+      }
+    }
+  }, [students, setStudents]);
+
+  const sanitizeStudentData = (studentData: Omit<Student, 'id'>): Omit<Student, 'id'> => ({
+    ...studentData,
+    name: capitalizeWords(studentData.name.trim()),
+    motherName: capitalizeWords(studentData.motherName.trim()),
+    fatherName: capitalizeWords(studentData.fatherName.trim()),
+    guardianName: capitalizeWords(studentData.guardianName.trim()),
+  });
+
   const handleAddStudent = (studentData: Omit<Student, 'id'>) => {
+    const sanitized = sanitizeStudentData(studentData);
     setStudents(prev => {
       const highestNum = prev.reduce((maxId, student) => {
         const num = parseInt(student.id.replace(/\D/g, ''), 10);
@@ -321,14 +394,15 @@ export const StudentProfiles = ({ students, setStudents, reportSettings, onDelet
       }, 0);
       const candidateId = `s${highestNum + 1}`;
       const uniqueId = prev.some(s => s.id === candidateId) ? `s${Date.now()}` : candidateId;
-      return [...prev, { ...studentData, id: uniqueId }];
+      return [...prev, { ...sanitized, id: uniqueId }];
     });
     setIsModalOpen(false);
   };
 
   const handleUpdateStudent = (studentData: Omit<Student, 'id'>) => {
     if (!editingStudent) return;
-    setStudents(prev => prev.map(s => s.id === editingStudent.id ? { ...s, ...studentData } : s));
+    const sanitized = sanitizeStudentData(studentData);
+    setStudents(prev => prev.map(s => s.id === editingStudent.id ? { ...s, ...sanitized } : s));
     setEditingStudent(null);
     setIsModalOpen(false);
   };

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useSyncedState } from './hooks/useSyncedState';
 import { Student, Grade, AttendanceRecord, Fee, SchoolEvent, AttendanceStatus, ReportSettings, DailyExpense } from './types';
-import { INITIAL_STUDENTS } from './constants';
+import { INITIAL_STUDENTS, capitalizeWords } from './constants';
 import { StudentProfiles } from './features/StudentProfiles';
 import { AttendanceTracker } from './features/AttendanceTracker';
 import { Gradebook } from './features/Gradebook';
@@ -111,6 +111,10 @@ const App = () => {
   const handleApproveStudent = (studentData: Omit<Student, 'id'>) => {
     const newStudent: Student = {
       ...studentData,
+      name: capitalizeWords(studentData.name),
+      fatherName: capitalizeWords(studentData.fatherName),
+      motherName: capitalizeWords(studentData.motherName),
+      guardianName: capitalizeWords(studentData.guardianName),
       id: `student-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
     };
     setStudents((prev) => [...prev, newStudent]);

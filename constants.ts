@@ -58,3 +58,12 @@ export const getPreviousClass = (className: string): string | null => {
   }
   return SCHOOL_CLASSES[0];
 };
+
+/**
+ * Auto-capitalize each word in a person's name as they type or upon save.
+ * Handles spaces, hyphens, and apostrophes (e.g., "john doe" -> "John Doe", "kwame nkrumah" -> "Kwame Nkrumah", "mary-ann o'brien" -> "Mary-Ann O'Brien").
+ */
+export const capitalizeWords = (str: string): string => {
+  if (!str) return '';
+  return str.replace(/(^|[\s\-\'])([a-z])/g, (_, boundary, char) => boundary + char.toUpperCase());
+};

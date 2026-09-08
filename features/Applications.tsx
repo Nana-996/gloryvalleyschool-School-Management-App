@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { Student } from '../types';
 import { useSyncedState } from '../hooks/useSyncedState';
+import { capitalizeWords } from '../constants';
 import { RefreshIcon, CheckCircleIcon, UserPlusIcon, ApplicationsIcon } from '../components/Icons';
 
 const PROXY_ENDPOINT = '/api/get-applications';
@@ -101,15 +102,15 @@ export const Applications: React.FC<ApplicationsProps> = ({ onApprove }) => {
   const handleApprove = (app: Application) => {
     const d = app.data;
     const newStudent: Omit<Student, 'id'> = {
-      name: d.student_name?.trim() || 'Unknown',
+      name: capitalizeWords(d.student_name?.trim() || 'Unknown'),
       class: d.class_level?.trim() || 'Unknown',
       dob: d.dob || '',
       yearOfRegistration: new Date().getFullYear(),
-      fatherName: d.father_name?.trim() || '',
+      fatherName: capitalizeWords(d.father_name?.trim() || ''),
       fatherPhone: d.father_phone?.trim() || '',
-      motherName: d.mother_name?.trim() || '',
+      motherName: capitalizeWords(d.mother_name?.trim() || ''),
       motherPhone: d.mother_phone?.trim() || '',
-      guardianName: d.guardian_name?.trim() || '',
+      guardianName: capitalizeWords(d.guardian_name?.trim() || ''),
       guardianPhone: d.guardian_phone?.trim() || '',
     };
     onApprove(newStudent);

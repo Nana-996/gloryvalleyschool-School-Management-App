@@ -1,4 +1,4 @@
-import { Grade, Student, AttendanceRecord, AttendanceStatus, ReportSettings, Fee, calculateAge } from '../types';
+import { Grade, Student, AttendanceRecord, AttendanceStatus, ReportSettings, Fee, calculateAge, FeePaymentLog } from '../types';
 import jsPDF from 'jspdf';
 
 const createPDFDoc = (options?: any) => {
@@ -262,10 +262,16 @@ export const exportAttendanceToPDF = (student: Student, records: AttendanceRecor
 };
 
 
-export const exportFeesToPDF = (student: Student | null, fees: Fee[], settings: ReportSettings, students: Student[] = []) => {
+export const exportFeesToPDF = (
+  student: Student | null,
+  fees: Fee[],
+  settings: ReportSettings,
+  students: Student[] = [],
+  titleOverride?: string
+) => {
   const doc = createPDFDoc();
   const primaryColorRgb = hexToRgb(settings.primaryColor);
-  let startY = 22;
+  let startY = 20;
 
   doc.setFont(settings.font);
   if (settings.logo) {
@@ -277,65 +283,87 @@ export const exportFeesToPDF = (student: Student | null, fees: Fee[], settings: 
       const logoHeight = 15;
       const logoWidth = logoHeight * aspectRatio;
       doc.addImage(settings.logo, 'PNG', 14, 15, logoWidth, logoHeight);
-      startY = 40;
+      startY = 38;
     } catch (e) {
       console.error("Error adding logo to PDF:", e);
     }
   }
 
+  // School Header
   doc.setFontSize(20);
+  doc.setFont(settings.font, 'bold');
   doc.setTextColor(settings.primaryColor);
-  doc.text(student ? 'Fee Report' : 'All Transactions Report', 14, startY);
+  doc.text("GLORY VALLEY SCHOOL", 14, startY);
+  startY += 7;
+
+  doc.setFontSize(9);
+  doc.setFont(settings.font, 'normal');
+  doc.setTextColor(100, 100, 100);
+  doc.text("Location: Abidjan Nkwanta, Near Church of Christ  •  GPS: AT-0978-0480", 14, startY);
+  startY += 5;
+  doc.text("Phone: +233 536 141 603 / +233 594 237 305", 14, startY);
   startY += 10;
 
-  doc.setTextColor(0, 0, 0);
-  doc.setFontSize(12);
-  if (student) {
-    doc.text(`Student: ${student.name}`, 14, startY);
-  } else {
-    doc.text('All Students Transactions Report', 14, startY);
-  }
-  startY += 20;
+  // Report Title
+  const reportTitle = titleOverride || (student ? `Student Fee Statement: ${student.name}` : 'School Fee & Financial Report');
+  doc.setFontSize(14);
+  doc.setFont(settings.font, 'bold');
+  doc.setTextColor(settings.primaryColor);
+  doc.text(reportTitle, 14, startY);
+  startY += 6;
 
-  // For all students report, we need to add student names to the table
+  doc.setFontSize(9);
+  doc.setFont(settings.font, 'normal');
+  doc.setTextColor(100, 100, 100);
+  if (student) {
+    doc.text(`Class: ${student.class || 'Unassigned'}  •  Date Generated: ${new Date().toLocaleDateString()}`, 14, startY);
+  } else {
+    doc.text(`Total Records: ${fees.length}  •  Date Generated: ${new Date().toLocaleDateString()}`, 14, startY);
+  }
+  startY += 10;
+
+  // Table Columns & Rows
   const tableColumn = student
-    ? ["Date", "Description", "Total Amount", "Amount Paid", "Balance", "Status"]
-    : ["Date", "Student", "Description", "Total Amount", "Amount Paid", "Balance", "Status"];
+    ? ["Date", "Description", "Total Billed", "Amount Paid", "Balance", "Status"]
+    : ["Date", "Student", "Class", "Description", "Total Billed", "Amount Paid", "Balance", "Status"];
 
   const tableRows: string[][] = [];
-  let totalPaid = 0, totalDue = 0;
+  let totalPaid = 0;
+  let totalDue = 0;
 
   fees.forEach(fee => {
-    totalPaid += fee.amountPaid;
-    totalDue += fee.totalAmount;
+    const feeBilled = Number(fee.totalAmount) || 0;
+    const feePaid = Number(fee.amountPaid) || 0;
+    const feeBalance = Math.max(0, feeBilled - feePaid);
+    totalPaid += feePaid;
+    totalDue += feeBilled;
 
-    // Find student name for all students report
-    const studentName = student
-      ? ''
-      : (students.find(s => s.id === fee.studentId)?.name || 'Unknown Student');
+    const matchedStudent = student || students.find(s => s.id === fee.studentId);
+    const studentName = matchedStudent?.name || 'Unknown Student';
+    const studentClass = matchedStudent?.class || '—';
 
-    // Calculate status
-    const status = fee.amountPaid >= fee.totalAmount ? 'Paid' : 'Owing';
-    const balance = Math.max(0, fee.totalAmount - fee.amountPaid);
+    const status = feeBalance === 0 ? 'Paid' : (feePaid > 0 ? 'Partial' : 'Owing');
+    const cleanDate = (fee.date || '').slice(0, 10);
 
     const row = student
       ? [
-        fee.date,
-        fee.description,
-        `GH₵ ${fee.totalAmount.toFixed(2)}`,
-        `GH₵ ${fee.amountPaid.toFixed(2)}`,
-        `GH₵ ${balance.toFixed(2)}`,
-        status,
-      ]
+          cleanDate,
+          fee.description,
+          `GH₵ ${feeBilled.toFixed(2)}`,
+          `GH₵ ${feePaid.toFixed(2)}`,
+          `GH₵ ${feeBalance.toFixed(2)}`,
+          status,
+        ]
       : [
-        fee.date,
-        studentName,
-        fee.description,
-        `GH₵ ${fee.totalAmount.toFixed(2)}`,
-        `GH₵ ${fee.amountPaid.toFixed(2)}`,
-        `GH₵ ${balance.toFixed(2)}`,
-        status,
-      ];
+          cleanDate,
+          studentName,
+          studentClass,
+          fee.description,
+          `GH₵ ${feeBilled.toFixed(2)}`,
+          `GH₵ ${feePaid.toFixed(2)}`,
+          `GH₵ ${feeBalance.toFixed(2)}`,
+          status,
+        ];
 
     tableRows.push(row);
   });
@@ -345,25 +373,158 @@ export const exportFeesToPDF = (student: Student | null, fees: Fee[], settings: 
     body: tableRows,
     startY: startY,
     theme: 'grid',
-    headStyles: { fillColor: primaryColorRgb },
-    styles: { font: settings.font },
+    headStyles: { fillColor: primaryColorRgb, textColor: 255 },
+    styles: { font: settings.font, fontSize: 8.5 },
   });
 
   const finalY = (doc as any).lastAutoTable.finalY || 80;
-  const balance = totalDue - totalPaid;
+  const balance = Math.max(0, totalDue - totalPaid);
 
-  doc.setFontSize(14);
-  doc.text('Summary', 14, finalY + 15);
-  doc.setFontSize(10);
-  doc.text(`Total Dues: GH₵ ${totalDue.toFixed(2)}`, 14, finalY + 22);
-  doc.text(`Total Paid: GH₵ ${totalPaid.toFixed(2)}`, 14, finalY + 28);
-  doc.text(`Balance: GH₵ ${balance.toFixed(2)}`, 14, finalY + 34);
+  // Summary box
+  doc.setFontSize(11);
+  doc.setFont(settings.font, 'bold');
+  doc.setTextColor(settings.primaryColor);
+  doc.text('Financial Summary', 14, finalY + 12);
+
+  doc.setFontSize(9.5);
+  doc.setFont(settings.font, 'normal');
+  doc.setTextColor(0, 0, 0);
+  doc.text(`Total Billed: GH₵ ${totalDue.toFixed(2)}`, 14, finalY + 19);
+  doc.text(`Total Paid: GH₵ ${totalPaid.toFixed(2)}`, 14, finalY + 25);
+
+  doc.setFont(settings.font, 'bold');
+  if (balance > 0) {
+    doc.setTextColor(220, 38, 38); // Red
+    doc.text(`Outstanding Balance: GH₵ ${balance.toFixed(2)}`, 14, finalY + 31);
+  } else {
+    doc.setTextColor(5, 150, 105); // Green
+    doc.text(`Outstanding Balance: GH₵ 0.00 (Fully Paid)`, 14, finalY + 31);
+  }
 
   const filename = student
-    ? `${student.name}_fee_report.pdf`
-    : 'all_transactions_report.pdf';
+    ? `${student.name.replace(/\s+/g, '_')}_fee_statement.pdf`
+    : 'fee_report.pdf';
 
   doc.save(filename);
+};
+
+/**
+ * Generate official payment receipt PDF
+ */
+export const exportPaymentReceiptPDF = (
+  student: Student,
+  payment: FeePaymentLog,
+  currentBalance: number,
+  feeDescription: string,
+  settings: ReportSettings
+) => {
+  const doc = createPDFDoc({ format: 'a5', orientation: 'landscape' });
+  const primaryColorRgb = hexToRgb(settings.primaryColor);
+  const pageWidth = doc.internal.pageSize.getWidth();
+  let startY = 16;
+
+  doc.setFont(settings.font);
+
+  // Background receipt border
+  doc.setDrawColor(...primaryColorRgb);
+  doc.setLineWidth(1);
+  doc.rect(8, 8, pageWidth - 16, doc.internal.pageSize.getHeight() - 16);
+
+  // School Logo
+  if (settings.logo) {
+    try {
+      const img = new Image();
+      img.src = settings.logo;
+      doc.addImage(settings.logo, 'PNG', 16, 14, 18, 18);
+    } catch (e) {
+      console.error("Error adding logo:", e);
+    }
+  }
+
+  // School Header
+  doc.setFontSize(18);
+  doc.setFont(settings.font, 'bold');
+  doc.setTextColor(settings.primaryColor);
+  doc.text("GLORY VALLEY SCHOOL", pageWidth / 2, startY, { align: 'center' });
+  startY += 6;
+
+  doc.setFontSize(8.5);
+  doc.setFont(settings.font, 'normal');
+  doc.setTextColor(80, 80, 80);
+  doc.text("Nimde3, 3ny3 Sika  •  Estd. 2023  •  Abidjan Nkwanta, GPS: AT-0978-0480", pageWidth / 2, startY, { align: 'center' });
+  startY += 5;
+  doc.text("Tel: +233 536 141 603 / +233 594 237 305", pageWidth / 2, startY, { align: 'center' });
+  startY += 8;
+
+  // Title & Receipt #
+  doc.setFillColor(...primaryColorRgb);
+  doc.rect(14, startY, pageWidth - 28, 8, 'F');
+  doc.setFontSize(11);
+  doc.setFont(settings.font, 'bold');
+  doc.setTextColor(255, 255, 255);
+  doc.text("OFFICIAL FEE PAYMENT RECEIPT", pageWidth / 2, startY + 5.5, { align: 'center' });
+  startY += 14;
+
+  // Receipt Meta Grid
+  doc.setFontSize(9);
+  doc.setFont(settings.font, 'normal');
+  doc.setTextColor(0, 0, 0);
+
+  // Left column
+  doc.text(`Receipt No: ${payment.receiptNo}`, 16, startY);
+  doc.text(`Student Name: ${student.name}`, 16, startY + 6);
+  doc.text(`Class: ${student.class || 'Unassigned'}`, 16, startY + 12);
+  doc.text(`Fee Item: ${feeDescription || 'Tuition / School Fee'}`, 16, startY + 18);
+
+  // Right column
+  const rightX = pageWidth / 2 + 10;
+  doc.text(`Date Paid: ${(payment.date || '').slice(0, 10)}`, rightX, startY);
+  doc.text(`Payment Method: ${payment.paymentMethod || 'Cash'}`, rightX, startY + 6);
+  if (payment.notes) {
+    doc.text(`Notes: ${payment.notes}`, rightX, startY + 12);
+  }
+  startY += 26;
+
+  // Amount Highlight Box
+  doc.setFillColor(243, 244, 246);
+  doc.rect(16, startY, pageWidth - 32, 18, 'F');
+  doc.setDrawColor(209, 213, 219);
+  doc.setLineWidth(0.5);
+  doc.rect(16, startY, pageWidth - 32, 18, 'S');
+
+  doc.setFontSize(10);
+  doc.setFont(settings.font, 'bold');
+  doc.setTextColor(6, 78, 59);
+  doc.text("AMOUNT PAID:", 22, startY + 7);
+  doc.setFontSize(15);
+  doc.text(`GH₵ ${(Number(payment.amount) || 0).toFixed(2)}`, 22, startY + 14);
+
+  doc.setFontSize(9);
+  doc.setFont(settings.font, 'normal');
+  doc.setTextColor(80, 80, 80);
+  doc.text("OUTSTANDING BALANCE:", rightX, startY + 7);
+  doc.setFont(settings.font, 'bold');
+  doc.setFontSize(13);
+  if (currentBalance <= 0) {
+    doc.setTextColor(5, 150, 105);
+    doc.text("GH₵ 0.00 (Fully Settled)", rightX, startY + 14);
+  } else {
+    doc.setTextColor(220, 38, 38);
+    doc.text(`GH₵ ${currentBalance.toFixed(2)}`, rightX, startY + 14);
+  }
+  startY += 26;
+
+  // Signatures / Stamp Footer
+  doc.setFontSize(8.5);
+  doc.setFont(settings.font, 'normal');
+  doc.setTextColor(100, 100, 100);
+  doc.text("Received by: .................................................", 16, startY);
+  doc.text("Official Stamp / Signature: .................................................", rightX, startY);
+
+  doc.setFontSize(7.5);
+  doc.text("Thank you for your payment. Please retain this receipt for your records.", pageWidth / 2, startY + 8, { align: 'center' });
+
+  doc.save(`Receipt_${payment.receiptNo}_${student.name.replace(/\s+/g, '_')}.pdf`);
 };
 
 export interface StudentFieldOption {

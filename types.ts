@@ -52,14 +52,29 @@ export enum FeeStatus {
   Overdue = 'Overdue',
 }
 
+export type PaymentMethod = 'Cash' | 'Mobile Money' | 'Bank Transfer' | 'Cheque' | 'Other';
+
+export interface FeePaymentLog {
+  id: string;
+  feeId?: string;
+  studentId: string;
+  date: string; // YYYY-MM-DD or ISO string
+  amount: number;
+  paymentMethod: PaymentMethod;
+  receiptNo: string;
+  notes?: string;
+}
+
 export interface Fee {
   id: string;
   studentId: string;
-  totalAmount: number; // Total amount that should be paid
+  totalAmount: number; // Total amount that should be paid (bill / invoice)
   amountPaid: number;  // Amount that has already been paid
-  date: string; // YYYY-MM-DD
+  date: string; // YYYY-MM-DD or ISO string
   description: string;
-  // Note: We'll calculate status dynamically based on totalAmount and amountPaid
+  term?: string;
+  academicYear?: string;
+  payments?: FeePaymentLog[];
 }
 
 export interface SchoolEvent {
@@ -78,7 +93,19 @@ export interface ReportSettings {
 
 export interface DailyExpense {
   id: string;
-  date: string; // YYYY-MM-DD
+  date: string; // YYYY-MM-DD or ISO string
   amount: number;
   description: string;
+  category?: string;
+  paymentMethod?: PaymentMethod;
+}
+
+export interface StudentFinancialSummary {
+  student: Student;
+  totalBilled: number;
+  totalPaid: number;
+  balance: number;
+  status: 'Paid' | 'Partial' | 'Unpaid' | 'Credit';
+  feeCount: number;
+  lastPaymentDate?: string;
 }
