@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { Student, Fee, ReportSettings, DailyExpense, PaymentMethod, FeePaymentLog } from '../types';
 import { exportFeesToPDF, exportPaymentReceiptPDF } from '../services/pdfGenerator';
-import { SCHOOL_CLASSES } from '../constants';
+import { SCHOOL_CLASSES, capitalizeWords } from '../constants';
 import {
   normalizeDate,
   formatCurrency,
@@ -1277,9 +1277,13 @@ export const FeeManager: React.FC<FeeManagerProps> = ({
                         type="text"
                         id="bill-custom-type"
                         value={billCustomType}
-                        onChange={e => setBillCustomType(e.target.value)}
+                        onChange={e => setBillCustomType(capitalizeWords(e.target.value))}
                         placeholder="e.g. Graduation Robe"
                         className="fee-input"
+                        autoCapitalize="words"
+                        autoCorrect="off"
+                        spellCheck={false}
+                        style={{ textTransform: 'capitalize' }}
                         required
                       />
                     </div>
@@ -1375,9 +1379,13 @@ export const FeeManager: React.FC<FeeManagerProps> = ({
                     type="text"
                     id="exp-description"
                     value={expenseDescription}
-                    onChange={e => setExpenseDescription(e.target.value)}
+                    onChange={e => setExpenseDescription(capitalizeWords(e.target.value))}
                     placeholder="e.g. ECG Electricity Bill for Admin Block"
                     className="fee-input"
+                    autoCapitalize="words"
+                    autoCorrect="off"
+                    spellCheck={false}
+                    style={{ textTransform: 'capitalize' }}
                     required
                   />
                 </div>

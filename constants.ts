@@ -65,5 +65,5 @@ export const getPreviousClass = (className: string): string | null => {
  */
 export const capitalizeWords = (str: string): string => {
   if (!str) return '';
-  return str.replace(/(^|[\s\-\'])([a-z])/g, (_, boundary, char) => boundary + char.toUpperCase());
+  return str.replace(/(^|[^a-zA-Z0-9'])([a-z])/g, (_, boundary, char) => boundary + char.toUpperCase());
 };

@@ -22,42 +22,219 @@ interface StudentFormProps {
   student?: Student | null;
 }
 
-const StudentForm = ({ onSubmit, onClose, student }: StudentFormProps) => {
-  const [formData, setFormData] = useState({
-    name: student?.name || '',
-    dob: student?.dob || '',
-    yearOfRegistration: student?.yearOfRegistration || new Date().getFullYear(),
-    class: student?.class ? normalizeClassName(student.class) : '',
-    motherName: student?.motherName || '',
-    motherPhone: student?.motherPhone || '',
-    fatherName: student?.fatherName || '',
-    fatherPhone: student?.fatherPhone || '',
-    guardianName: student?.guardianName || '',
-    guardianPhone: student?.guardianPhone || '',
-  });
+const ADD_STUDENT_DRAFT_KEY = 'gvs_student_add_draft';
+const EDIT_STUDENT_DRAFT_PREFIX = 'gvs_student_edit_draft_';
 
-  const isInitiallyCustom = Boolean(
-    student?.class &&
-    !SCHOOL_CLASSES.includes(normalizeClassName(student.class) as any)
-  );
-  const [isCustomClass, setIsCustomClass] = useState(isInitiallyCustom);
+interface StudentFormData {
+  name: string;
+  dob: string;
+  yearOfRegistration: number;
+  class: string;
+  motherName: string;
+  motherPhone: string;
+  fatherName: string;
+  fatherPhone: string;
+  guardianName: string;
+  guardianPhone: string;
+}
+
+const getEmptyStudentFormData = (): StudentFormData => ({
+  name: '',
+  dob: '',
+  yearOfRegistration: new Date().getFullYear(),
+  class: '',
+  motherName: '',
+  motherPhone: '',
+  fatherName: '',
+  fatherPhone: '',
+  guardianName: '',
+  guardianPhone: '',
+});
+
+const getInitialStudentFormState = (student?: Student | null) => {
+  const empty = getEmptyStudentFormData();
+
+  if (student) {
+    try {
+      const savedEditDraft = window.localStorage.getItem(EDIT_STUDENT_DRAFT_PREFIX + student.id);
+      if (savedEditDraft) {
+        const parsed = JSON.parse(savedEditDraft);
+        const merged: StudentFormData = { ...empty, ...parsed.formData };
+        const isCustom = Boolean(
+          parsed.isCustomClass ??
+          (merged.class && !SCHOOL_CLASSES.includes(normalizeClassName(merged.class) as any))
+        );
+        return {
+          formData: merged,
+          isCustomClass: isCustom,
+          hasDraft: true,
+        };
+      }
+    } catch {
+      // ignore
+    }
+
+    const initialClass = student.class ? normalizeClassName(student.class) : '';
+    const isCustom = Boolean(
+      initialClass && !SCHOOL_CLASSES.includes(initialClass as any)
+    );
+    return {
+      formData: {
+        name: student.name || '',
+        dob: student.dob || '',
+        yearOfRegistration: student.yearOfRegistration || empty.yearOfRegistration,
+        class: initialClass,
+        motherName: student.motherName || '',
+        motherPhone: student.motherPhone || '',
+        fatherName: student.fatherName || '',
+        fatherPhone: student.fatherPhone || '',
+        guardianName: student.guardianName || '',
+        guardianPhone: student.guardianPhone || '',
+      },
+      isCustomClass: isCustom,
+      hasDraft: false,
+    };
+  }
+
+  try {
+    const savedDraft = window.localStorage.getItem(ADD_STUDENT_DRAFT_KEY);
+    if (savedDraft) {
+      const parsed = JSON.parse(savedDraft);
+      const merged: StudentFormData = { ...empty, ...parsed.formData };
+      const isCustom = Boolean(
+        parsed.isCustomClass ??
+        (merged.class && !SCHOOL_CLASSES.includes(normalizeClassName(merged.class) as any))
+      );
+      const hasContent = Object.entries(merged).some(
+        ([key, val]) => key !== 'yearOfRegistration' && typeof val === 'string' && val.trim().length > 0
+      );
+      return {
+        formData: merged,
+        isCustomClass: isCustom,
+        hasDraft: hasContent,
+      };
+    }
+  } catch {
+    // ignore
+  }
+
+  return {
+    formData: empty,
+    isCustomClass: false,
+    hasDraft: false,
+  };
+};
+
+const StudentForm = ({ onSubmit, onClose, student }: StudentFormProps) => {
+  const [initialState] = useState(() => getInitialStudentFormState(student));
+  const [formData, setFormData] = useState<StudentFormData>(initialState.formData);
+  const [isCustomClass, setIsCustomClass] = useState(initialState.isCustomClass);
+  const [hasRestoredDraft, setHasRestoredDraft] = useState(initialState.hasDraft);
+
+  const saveDraftToStorage = (data: StudentFormData, customClass: boolean) => {
+    try {
+      const payload = JSON.stringify({
+        formData: data,
+        isCustomClass: customClass,
+      });
+      if (student) {
+        window.localStorage.setItem(EDIT_STUDENT_DRAFT_PREFIX + student.id, payload);
+      } else {
+        window.localStorage.setItem(ADD_STUDENT_DRAFT_KEY, payload);
+      }
+    } catch {
+      // ignore
+    }
+  };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
-    const nameFields = ['name', 'motherName', 'fatherName', 'guardianName'];
-    const formattedValue = nameFields.includes(name) ? capitalizeWords(value) : value;
-    setFormData(prev => ({ ...prev, [name]: formattedValue }));
+    const nameFields = ['name', 'class', 'motherName', 'fatherName', 'guardianName'];
+    const isCapitalizedField = nameFields.includes(name);
+    const formattedValue = isCapitalizedField ? capitalizeWords(value) : value;
+
+    if (isCapitalizedField && e.target instanceof HTMLInputElement) {
+      const start = e.target.selectionStart;
+      const end = e.target.selectionEnd;
+      setFormData(prev => {
+        const next = { ...prev, [name]: formattedValue };
+        saveDraftToStorage(next, isCustomClass);
+        return next;
+      });
+      if (start !== null && end !== null && formattedValue !== value) {
+        requestAnimationFrame(() => {
+          try {
+            (e.target as HTMLInputElement).setSelectionRange(start, end);
+          } catch {
+            // ignore
+          }
+        });
+      }
+    } else {
+      setFormData(prev => {
+        const next = { ...prev, [name]: formattedValue };
+        saveDraftToStorage(next, isCustomClass);
+        return next;
+      });
+    }
   };
 
   const handleClassSelectChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const val = e.target.value;
     if (val === '__custom__') {
       setIsCustomClass(true);
-      setFormData(prev => ({ ...prev, class: '' }));
+      setFormData(prev => {
+        const next = { ...prev, class: '' };
+        saveDraftToStorage(next, true);
+        return next;
+      });
     } else {
       setIsCustomClass(false);
-      setFormData(prev => ({ ...prev, class: val }));
+      setFormData(prev => {
+        const next = { ...prev, class: val };
+        saveDraftToStorage(next, false);
+        return next;
+      });
     }
+  };
+
+  const handleDiscardDraft = () => {
+    const confirmMessage = student
+      ? 'Reset this form back to the original student profile?'
+      : 'Discard this unsaved draft and start with a blank form?';
+    if (!window.confirm(confirmMessage)) return;
+
+    try {
+      if (student) {
+        window.localStorage.removeItem(EDIT_STUDENT_DRAFT_PREFIX + student.id);
+      } else {
+        window.localStorage.removeItem(ADD_STUDENT_DRAFT_KEY);
+      }
+    } catch {
+      // ignore
+    }
+
+    if (student) {
+      const initialClass = student.class ? normalizeClassName(student.class) : '';
+      const isCustom = Boolean(initialClass && !SCHOOL_CLASSES.includes(initialClass as any));
+      setFormData({
+        name: student.name || '',
+        dob: student.dob || '',
+        yearOfRegistration: student.yearOfRegistration || new Date().getFullYear(),
+        class: initialClass,
+        motherName: student.motherName || '',
+        motherPhone: student.motherPhone || '',
+        fatherName: student.fatherName || '',
+        fatherPhone: student.fatherPhone || '',
+        guardianName: student.guardianName || '',
+        guardianPhone: student.guardianPhone || '',
+      });
+      setIsCustomClass(isCustom);
+    } else {
+      setFormData(getEmptyStudentFormData());
+      setIsCustomClass(false);
+    }
+    setHasRestoredDraft(false);
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -66,9 +243,21 @@ const StudentForm = ({ onSubmit, onClose, student }: StudentFormProps) => {
       alert("Please provide at least one of: Mother's Name, Father's Name, or Guardian's Name.");
       return;
     }
+
+    // Always clear the draft upon finishing Create or Update
+    try {
+      if (student) {
+        window.localStorage.removeItem(EDIT_STUDENT_DRAFT_PREFIX + student.id);
+      }
+      window.localStorage.removeItem(ADD_STUDENT_DRAFT_KEY);
+    } catch {
+      // ignore
+    }
+
     onSubmit({
       ...formData,
       name: capitalizeWords(formData.name.trim()),
+      class: capitalizeWords(formData.class.trim()),
       motherName: capitalizeWords(formData.motherName.trim()),
       fatherName: capitalizeWords(formData.fatherName.trim()),
       guardianName: capitalizeWords(formData.guardianName.trim()),
@@ -80,6 +269,35 @@ const StudentForm = ({ onSubmit, onClose, student }: StudentFormProps) => {
 
   return (
     <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+      {hasRestoredDraft && (
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          gap: 12,
+          padding: '10px 14px',
+          background: 'rgba(79,140,255,0.08)',
+          border: '1px solid rgba(79,140,255,0.2)',
+          borderRadius: 'var(--radius-md)',
+          fontSize: 12,
+          color: 'var(--text-secondary)'
+        }}>
+          <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <span style={{ width: 8, height: 8, borderRadius: '50%', background: 'var(--accent-blue)', display: 'inline-block' }}></span>
+            <span>
+              {student ? 'Restored unsaved edits' : 'Restored previous unsaved information'}
+            </span>
+          </span>
+          <button
+            type="button"
+            onClick={handleDiscardDraft}
+            className="btn btn-ghost btn-sm"
+            style={{ fontSize: 11, padding: '2px 8px', height: 'auto', color: 'var(--accent-rose)' }}
+          >
+            {student ? 'Reset Changes' : 'Discard Draft'}
+          </button>
+        </div>
+      )}
       <div className="form-group">
         <label className="form-label">Name</label>
         <input
@@ -90,6 +308,9 @@ const StudentForm = ({ onSubmit, onClose, student }: StudentFormProps) => {
           className="form-input"
           style={{ textTransform: 'capitalize' }}
           placeholder="e.g. Kwame Mensah"
+          autoCapitalize="words"
+          autoCorrect="off"
+          spellCheck={false}
           required
         />
       </div>
@@ -113,7 +334,11 @@ const StudentForm = ({ onSubmit, onClose, student }: StudentFormProps) => {
                 type="button"
                 onClick={() => {
                   setIsCustomClass(false);
-                  setFormData(p => ({ ...p, class: '' }));
+                  setFormData(p => {
+                    const next = { ...p, class: '' };
+                    saveDraftToStorage(next, false);
+                    return next;
+                  });
                 }}
                 className="btn btn-ghost btn-sm"
                 style={{ fontSize: 11, padding: '0 4px', height: 'auto', color: 'var(--accent-blue)' }}
@@ -130,6 +355,10 @@ const StudentForm = ({ onSubmit, onClose, student }: StudentFormProps) => {
               onChange={handleChange}
               placeholder="Enter custom class name"
               className="form-input"
+              style={{ textTransform: 'capitalize' }}
+              autoCapitalize="words"
+              autoCorrect="off"
+              spellCheck={false}
             />
           ) : (
             <select
@@ -173,6 +402,9 @@ const StudentForm = ({ onSubmit, onClose, student }: StudentFormProps) => {
                 className="form-input"
                 style={{ textTransform: 'capitalize' }}
                 placeholder="Leave blank if absent"
+                autoCapitalize="words"
+                autoCorrect="off"
+                spellCheck={false}
               />
             </div>
             <div className="form-group" style={{ flex: 1 }}>
@@ -196,6 +428,9 @@ const StudentForm = ({ onSubmit, onClose, student }: StudentFormProps) => {
                 className="form-input"
                 style={{ textTransform: 'capitalize' }}
                 placeholder="Leave blank if absent"
+                autoCapitalize="words"
+                autoCorrect="off"
+                spellCheck={false}
               />
             </div>
             <div className="form-group" style={{ flex: 1 }}>
@@ -223,6 +458,9 @@ const StudentForm = ({ onSubmit, onClose, student }: StudentFormProps) => {
                 className="form-input"
                 style={{ textTransform: 'capitalize' }}
                 placeholder={hasParent ? 'Optional' : 'Required'}
+                autoCapitalize="words"
+                autoCorrect="off"
+                spellCheck={false}
               />
             </div>
             <div className="form-group" style={{ flex: 1 }}>
@@ -233,9 +471,19 @@ const StudentForm = ({ onSubmit, onClose, student }: StudentFormProps) => {
         </div>
       </div>
 
-      <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8, paddingTop: 8 }}>
-        <button type="button" onClick={onClose} className="btn btn-secondary">Cancel</button>
-        <button type="submit" className="btn btn-primary">{student ? 'Update' : 'Create'}</button>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8, paddingTop: 8 }}>
+        <button
+          type="button"
+          onClick={handleDiscardDraft}
+          className="btn btn-ghost btn-sm"
+          style={{ color: 'var(--text-muted)', fontSize: 12 }}
+        >
+          {student ? 'Reset Changes' : 'Clear Form'}
+        </button>
+        <div style={{ display: 'flex', gap: 8 }}>
+          <button type="button" onClick={onClose} className="btn btn-secondary">Cancel</button>
+          <button type="submit" className="btn btn-primary">{student ? 'Update' : 'Create'}</button>
+        </div>
       </div>
     </form>
   );
@@ -380,12 +628,16 @@ export const StudentProfiles = ({ students, setStudents, reportSettings, onDelet
   const sanitizeStudentData = (studentData: Omit<Student, 'id'>): Omit<Student, 'id'> => ({
     ...studentData,
     name: capitalizeWords(studentData.name.trim()),
+    class: capitalizeWords(studentData.class?.trim() || ''),
     motherName: capitalizeWords(studentData.motherName.trim()),
     fatherName: capitalizeWords(studentData.fatherName.trim()),
     guardianName: capitalizeWords(studentData.guardianName.trim()),
   });
 
   const handleAddStudent = (studentData: Omit<Student, 'id'>) => {
+    try {
+      window.localStorage.removeItem(ADD_STUDENT_DRAFT_KEY);
+    } catch { /* ignore */ }
     const sanitized = sanitizeStudentData(studentData);
     setStudents(prev => {
       const highestNum = prev.reduce((maxId, student) => {
@@ -401,6 +653,10 @@ export const StudentProfiles = ({ students, setStudents, reportSettings, onDelet
 
   const handleUpdateStudent = (studentData: Omit<Student, 'id'>) => {
     if (!editingStudent) return;
+    try {
+      window.localStorage.removeItem(EDIT_STUDENT_DRAFT_PREFIX + editingStudent.id);
+      window.localStorage.removeItem(ADD_STUDENT_DRAFT_KEY);
+    } catch { /* ignore */ }
     const sanitized = sanitizeStudentData(studentData);
     setStudents(prev => prev.map(s => s.id === editingStudent.id ? { ...s, ...sanitized } : s));
     setEditingStudent(null);
@@ -529,7 +785,12 @@ export const StudentProfiles = ({ students, setStudents, reportSettings, onDelet
       )}
 
       <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title={editingStudent ? 'Edit Student' : 'Add New Student'}>
-        <StudentForm onSubmit={editingStudent ? handleUpdateStudent : handleAddStudent} onClose={() => setIsModalOpen(false)} student={editingStudent} />
+        <StudentForm
+          key={editingStudent ? `edit-${editingStudent.id}` : 'add-new'}
+          onSubmit={editingStudent ? handleUpdateStudent : handleAddStudent}
+          onClose={() => setIsModalOpen(false)}
+          student={editingStudent}
+        />
       </Modal>
 
       <Modal isOpen={isDownloadModalOpen} onClose={() => setIsDownloadModalOpen(false)} title="Download Student List" wide>

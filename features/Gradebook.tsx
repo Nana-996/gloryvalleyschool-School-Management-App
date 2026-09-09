@@ -4,6 +4,7 @@ import { Student, Grade, AttendanceRecord, ReportSettings, Fee } from '../types'
 import { exportGradesToPDF } from '../services/pdfGenerator';
 import jsPDF from 'jspdf';
 import { PDFIcon, PlusIcon, DeleteIcon } from '../components/Icons';
+import { capitalizeWords } from '../constants';
 
 interface GradebookProps {
     students: Student[];
@@ -84,7 +85,18 @@ export const Gradebook = ({ students, grades, setGrades, attendance, fees, repor
                         </div>
                         <div className="form-group">
                             <label className="form-label">Subject</label>
-                            <input type="text" value={subject} onChange={e => setSubject(e.target.value)} className="form-input" required />
+                            <input
+                                type="text"
+                                value={subject}
+                                onChange={e => setSubject(capitalizeWords(e.target.value))}
+                                className="form-input"
+                                placeholder="e.g. Mathematics"
+                                autoCapitalize="words"
+                                autoCorrect="off"
+                                spellCheck={false}
+                                style={{ textTransform: 'capitalize' }}
+                                required
+                            />
                         </div>
                         <div className="form-group">
                             <label className="form-label">Class Score (out of 50)</label>
@@ -131,7 +143,16 @@ export const Gradebook = ({ students, grades, setGrades, attendance, fees, repor
                                 <div>
                                     <div style={{ marginBottom: 16 }}>
                                         <label className="form-label">Student Name</label>
-                                        <input type="text" value={previewData.student.name} onChange={e => setPreviewData({ ...previewData, student: { ...previewData.student, name: e.target.value } })} className="form-input" />
+                                        <input
+                                            type="text"
+                                            value={previewData.student.name}
+                                            onChange={e => setPreviewData({ ...previewData, student: { ...previewData.student, name: capitalizeWords(e.target.value) } })}
+                                            className="form-input"
+                                            autoCapitalize="words"
+                                            autoCorrect="off"
+                                            spellCheck={false}
+                                            style={{ textTransform: 'capitalize' }}
+                                        />
                                     </div>
                                     <div style={{ marginBottom: 16 }}>
                                         <label className="form-label">Grades</label>
@@ -146,11 +167,20 @@ export const Gradebook = ({ students, grades, setGrades, attendance, fees, repor
                                             <tbody>
                                                 {previewData.grades.map((g: any, idx: number) => (
                                                     <tr key={g.id}>
-                                                        <td><input type="text" value={g.subject} onChange={e => {
-                                                            const grades = [...previewData.grades];
-                                                            grades[idx].subject = e.target.value;
-                                                            setPreviewData({ ...previewData, grades });
-                                                        }} className="fee-input-sm" style={{ width: 120 }} /></td>
+                                                        <td><input
+                                                            type="text"
+                                                            value={g.subject}
+                                                            onChange={e => {
+                                                                const grades = [...previewData.grades];
+                                                                grades[idx].subject = capitalizeWords(e.target.value);
+                                                                setPreviewData({ ...previewData, grades });
+                                                            }}
+                                                            className="fee-input-sm"
+                                                            style={{ width: 120, textTransform: 'capitalize' }}
+                                                            autoCapitalize="words"
+                                                            autoCorrect="off"
+                                                            spellCheck={false}
+                                                        /></td>
                                                         <td><input type="number" value={g.classScore} min={0} max={50} onChange={e => {
                                                             const grades = [...previewData.grades];
                                                             grades[idx].classScore = Number(e.target.value);

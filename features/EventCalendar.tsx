@@ -2,6 +2,7 @@ import React, { useState, useMemo } from 'react';
 import { SchoolEvent } from '../types';
 import { Modal } from '../components/Modal';
 import { PlusIcon, ChevronLeftIcon, ChevronRightIcon, CalendarIcon } from '../components/Icons';
+import { capitalizeWords } from '../constants';
 
 const daysInMonth = (year: number, month: number) => new Date(year, month + 1, 0).getDate();
 const firstDayOfMonth = (year: number, month: number) => new Date(year, month, 1).getDay();
@@ -16,7 +17,9 @@ interface EventFormProps {
 const EventForm = ({ onSubmit, onClose, date }: EventFormProps) => {
   const [formData, setFormData] = useState({ title: '', description: '', type: 'Event' as SchoolEvent['type'], date });
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
-    setFormData(prev => ({ ...prev, [e.target.name]: e.target.value }));
+    const { name, value } = e.target;
+    const formattedValue = name === 'title' ? capitalizeWords(value) : value;
+    setFormData(prev => ({ ...prev, [name]: formattedValue }));
   };
   const handleSubmit = (e: React.FormEvent) => { e.preventDefault(); onSubmit(formData); };
 
@@ -28,7 +31,19 @@ const EventForm = ({ onSubmit, onClose, date }: EventFormProps) => {
       </div>
       <div className="form-group">
         <label className="form-label">Title</label>
-        <input type="text" name="title" value={formData.title} onChange={handleChange} className="form-input" required />
+        <input
+          type="text"
+          name="title"
+          value={formData.title}
+          onChange={handleChange}
+          className="form-input"
+          placeholder="e.g. Mid-Term Exams"
+          autoCapitalize="words"
+          autoCorrect="off"
+          spellCheck={false}
+          style={{ textTransform: 'capitalize' }}
+          required
+        />
       </div>
       <div className="form-group">
         <label className="form-label">Type</label>

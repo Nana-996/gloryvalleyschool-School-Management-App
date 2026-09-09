@@ -9,6 +9,8 @@ interface ModalProps {
 }
 
 export const Modal = ({ isOpen, onClose, title, wide, children }: ModalProps) => {
+  const isBackdropMouseDownRef = React.useRef(false);
+
   useEffect(() => {
     if (!isOpen) return;
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -22,10 +24,26 @@ export const Modal = ({ isOpen, onClose, title, wide, children }: ModalProps) =>
 
   if (!isOpen) return null;
 
+  const handleBackdropMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (e.target === e.currentTarget) {
+      isBackdropMouseDownRef.current = true;
+    } else {
+      isBackdropMouseDownRef.current = false;
+    }
+  };
+
+  const handleBackdropClick = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (isBackdropMouseDownRef.current && e.target === e.currentTarget) {
+      onClose();
+    }
+    isBackdropMouseDownRef.current = false;
+  };
+
   return (
     <div
       className="modal-backdrop modal-overlay"
-      onClick={onClose}
+      onMouseDown={handleBackdropMouseDown}
+      onClick={handleBackdropClick}
       role="dialog"
       aria-modal="true"
       aria-labelledby="modal-title"

@@ -112,6 +112,7 @@ const App = () => {
     const newStudent: Student = {
       ...studentData,
       name: capitalizeWords(studentData.name),
+      class: capitalizeWords(studentData.class || ''),
       fatherName: capitalizeWords(studentData.fatherName),
       motherName: capitalizeWords(studentData.motherName),
       guardianName: capitalizeWords(studentData.guardianName),
